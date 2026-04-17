@@ -1038,6 +1038,156 @@
     }
     .dup-btn-submit:active { background: #bf360c; }
     .dup-btn-cancel:active { background: #e0e0e0; }
+
+    /* ============================================================
+       📱 モバイル用オーバーライド（viewport幅 ≤ 768px）
+       元のデザインはタブレット/PC向けの大きな値を使っているため、
+       スマホでは全体的に小さめに調整する
+    ============================================================ */
+    @media (max-width: 768px) {
+      :root {
+        --navbar-h: 60px;
+        --recorder-h: 56px;
+        --tabbar-h: 92px;
+      }
+
+      /* ナビゲーションバー */
+      #navbar-inner { height: 60px !important; padding: 0 14px !important; gap: 8px; }
+      #navbar-icon  { font-size: 28px !important; }
+      #navbar-title { font-size: 20px !important; }
+      #navbar-sub   { font-size: 14px !important; }
+
+      /* 記録者バー */
+      #recorder-bar { padding: 0 12px !important; gap: 8px; }
+      #recorder-bar .rec-icon  { font-size: 22px; }
+      #recorder-bar .rec-label { font-size: 16px !important; }
+      #recorder-bar select     { height: 38px; font-size: 16px; border-radius: 10px; padding: 0 10px; border-width: 1px; }
+
+      /* タブバー */
+      #tabbar { height: 92px; padding-top: 6px; padding-bottom: 8px; }
+      .t-icon-wrap { width: 48px !important; height: 36px !important; border-radius: 18px !important; }
+      .tab-btn .t-icon  { font-size: 34px !important; }
+      .tab-btn .t-label { font-size: 12px !important; }
+      .tab-btn { gap: 3px !important; }
+
+      /* コンテンツ全体 */
+      #content { padding-bottom: 100px; }
+      body.schedule-mode #content { padding-top: calc(var(--sat) + var(--navbar-h) + 6px); }
+
+      /* セクションラベル・カード */
+      .section-label { font-size: 15px !important; margin: 18px 0 8px 14px; }
+      .card { border-radius: 14px; }
+      .row { min-height: 52px; padding: 0 16px; gap: 10px; }
+      .row-label { font-size: 18px !important; min-width: 100px; }
+      .row-label .row-unit { font-size: 12px !important; }
+      .row input, .row select, .row textarea {
+        font-size: 18px !important; height: 50px; padding: 12px 0;
+      }
+      .row textarea { min-height: 80px; padding: 12px 0; }
+
+      /* 2カラム / 3カラムグリッド */
+      .grid3 .row { min-height: 60px; padding: 10px 8px; }
+      .grid3 .row .row-label { font-size: 14px !important; }
+      .grid3 .row input { font-size: 18px !important; }
+
+      /* バッジ */
+      .calc-badge { font-size: 13px; padding: 2px 10px; border-radius: 18px; }
+
+      /* 天候・朝夕ボタン */
+      .w-btn  { height: 56px; font-size: 14px; border-radius: 12px; }
+      .w-btn .w-emoji { font-size: 22px; }
+      .w-btn .w-label { font-size: 13px; }
+      .seg-btn { height: 50px; font-size: 18px; gap: 6px; border-radius: 12px; }
+      .seg { border-radius: 12px; padding: 3px; gap: 3px; }
+
+      /* 送信ボタン */
+      .submit-btn { height: 60px; font-size: 20px; margin-top: 20px; border-radius: 18px; }
+
+      /* 結果オーバーレイ */
+      #result-card { border-radius: 24px; padding: 40px 28px 32px; gap: 14px; }
+      #result-icon  { font-size: 60px; }
+      #result-title { font-size: 28px; }
+      #result-sub   { font-size: 16px; }
+
+      /* トースト */
+      #toast { font-size: 16px; padding: 10px 18px; border-radius: 10px; bottom: calc(var(--sab) + var(--tabbar-h) + 12px); }
+
+      /* 作業記録（パック浸水・正転）グループ */
+      .work-section { padding: 14px 14px 12px; }
+      .work-title   { font-size: 17px; margin-bottom: 10px; }
+      .group-grid   { gap: 8px; }
+      .grp-btn      { height: 50px; font-size: 18px; border-radius: 10px; }
+      .excl-toggle  { font-size: 14px; padding: 10px 14px; }
+      .excl-toggle .excl-arrow { font-size: 12px; }
+      .excl-panel   { padding: 10px 14px 14px; }
+      .excl-note    { font-size: 13px; margin-bottom: 10px; }
+      .excl-cont-label { font-size: 14px; margin: 10px 0 6px; }
+      .col-grid     { gap: 5px; }
+      .col-btn      { height: 42px; font-size: 16px; border-radius: 9px; }
+
+      /* ---- 予定タブ ---- */
+      .schedule-date { font-size: 24px; padding: 14px 14px 4px; }
+      .schedule-date .sch-sub { font-size: 14px; margin-top: 2px; }
+      .sch-card { border-radius: 14px; margin: 10px 10px; }
+      .sch-header { font-size: 18px !important; padding: 14px 14px 8px; gap: 8px; }
+      .sch-header .sch-icon { font-size: 22px; }
+      .sch-body { padding: 0 14px 14px; }
+
+      /* 赤背景の today-active カード */
+      .sch-card.today-active .sch-header { font-size: 19px !important; }
+      .sch-card.today-active .sch-header::after {
+        padding: 3px 10px; font-size: 13px; border-radius: 14px;
+      }
+
+      /* バッジ（コンテナごとの列表示） */
+      .sch-badge { font-size: 20px; padding: 6px 14px; border-radius: 18px; margin: 3px 3px; font-weight: 700; }
+
+      /* 正転リスト */
+      .flip-list li { font-size: 15px; padding: 6px 0; gap: 8px; }
+      .flip-col     { width: 48px; font-size: 16px; }
+
+      /* 菌床サマリー */
+      .bed-summary-row { font-size: 14px; padding: 8px 10px; gap: 6px; border-radius: 8px; }
+      .bed-summary-row .bs-group   { font-size: 15px; min-width: 48px; }
+      .bed-summary-row .bs-discard { font-size: 12px; }
+
+      /* 記録忘れ警告 */
+      .sch-card.rec-alert .sch-header { font-size: 19px !important; }
+      .rec-alert-item { padding: 10px 14px; border-radius: 10px; border-left-width: 4px; }
+      .rec-alert-label  { font-size: 16px; }
+      .rec-alert-detail { font-size: 13px; }
+
+      /* 次回予告 */
+      .sch-next { font-size: 14px; padding: 4px 0; }
+
+      /* 休日画面 */
+      .sch-off { padding: 40px 20px; }
+      .sch-off .off-icon { font-size: 50px; margin-bottom: 10px; }
+      .sch-off .off-text { font-size: 20px; }
+
+      /* ローディング */
+      .sch-loading { padding: 40px 16px; font-size: 18px; }
+      .sch-loading .spinner { width: 30px; height: 30px; border-width: 3px; margin-bottom: 10px; }
+
+      /* 重複確認ダイアログ */
+      #dup-card { border-radius: 20px; padding: 26px 20px 20px; width: 90vw; border-top-width: 5px; }
+      #dup-card .dup-icon  { font-size: 44px; margin-bottom: 8px; }
+      #dup-card .dup-title { font-size: 22px; margin-bottom: 10px; }
+      #dup-card .dup-msg   { font-size: 15px; margin-bottom: 12px; }
+      #dup-list            { padding: 12px 14px; border-radius: 12px; margin-bottom: 14px; }
+      .dup-item            { font-size: 15px; padding: 8px 0; gap: 8px; }
+      .dup-item .dup-time  { min-width: 78px; }
+      .dup-buttons         { gap: 10px; margin-top: 12px; }
+      .dup-btn             { height: 54px; font-size: 17px; border-radius: 14px; }
+
+      /* 浸水・加圧散水 説明テキスト */
+      .sch-body div[style*="font-size:22px"],
+      .sch-body div[style*="font-size:24px"],
+      .sch-body div[style*="font-size:26px"],
+      .sch-body div[style*="font-size:28px"],
+      .sch-body div[style*="font-size:30px"],
+      .sch-body div[style*="font-size:32px"] { font-size: 15px !important; }
+    }
   </style>
 </head>
 <body class="schedule-mode">
@@ -1619,7 +1769,7 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw5v5ICY7VapPvYBStvD
 
 // 共有トークン（GAS側と同じ値に設定すること）
 // イタズラ送信防止。本格的なセキュリティではないが、偶然URLを踏んだ人の送信を防ぐ
-const API_TOKEN = 'shiitake-tsuwabuki-2026-x8p3q7m2k9';
+const API_TOKEN = 'CHANGE_THIS_TOKEN_TO_RANDOM_STRING';
 
 /* ===================================================
    GAS API 呼び出し（text/plain で CORS preflight 回避）
