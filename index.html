@@ -62,6 +62,10 @@
       z-index: 9998 !important;
       background: #2e7d32 !important;
       box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+      /* ★ ノッチ対応: safe-area分をpaddingで確保（PWAモードで必須） */
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-left: env(safe-area-inset-left, 0px);
+      padding-right: env(safe-area-inset-right, 0px);
     }
     #navbar-inner {
       height: 124px !important;
@@ -156,11 +160,14 @@
       z-index: 9999 !important;
       background: #ffffff !important;
       border-top: 1px solid #c6c6c8;
-      padding-bottom: 16px;
+      /* ★ ホームインジケーター対応: safe-area分を下paddingに */
+      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
       padding-top: 10px;
+      padding-left: env(safe-area-inset-left, 0px);
+      padding-right: env(safe-area-inset-right, 0px);
       display: flex !important;
       box-shadow: 0 -2px 16px rgba(0,0,0,0.12);
-      height: 210px;
+      height: calc(210px + env(safe-area-inset-bottom, 0px));
       align-items: flex-start;
     }
     .tab-btn {
@@ -1064,7 +1071,11 @@
       #recorder-bar select     { height: 38px; font-size: 16px; border-radius: 10px; padding: 0 10px; border-width: 1px; }
 
       /* タブバー */
-      #tabbar { height: 92px; padding-top: 6px; padding-bottom: 8px; }
+      #tabbar {
+        height: calc(92px + env(safe-area-inset-bottom, 0px));
+        padding-top: 6px;
+        padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+      }
       .t-icon-wrap { width: 48px !important; height: 36px !important; border-radius: 18px !important; }
       .tab-btn .t-icon  { font-size: 34px !important; }
       .tab-btn .t-label { font-size: 12px !important; }
@@ -1635,12 +1646,12 @@
           <optgroup label="━ くるみ市">
             <option value="くるみ市|17">くるみ市</option>
           </optgroup>
-          <optgroup label="━ グッディー (20%)">
-            <option value="グッディー 医大通り店|20">医大通り店</option>
-            <option value="グッディー 北部店|20">北部店</option>
-            <option value="グッディー 木次店|20">木次店</option>
-            <option value="グッディー 平田店|20">平田店</option>
-            <option value="グッディー 大田店|20">大田店</option>
+          <optgroup label="━ グッディー (17%)">
+            <option value="グッディー 医大通り店|17">医大通り店</option>
+            <option value="グッディー 北部店|17">北部店</option>
+            <option value="グッディー 木次店|17">木次店</option>
+            <option value="グッディー 平田店|17">平田店</option>
+            <option value="グッディー 大田店|17">大田店</option>
           </optgroup>
           <optgroup label="━ ラピタ (22%)">
             <option value="ラピタ 本店|22">本店</option>
@@ -1648,6 +1659,10 @@
             <option value="ラピタ 浜山店|22">浜山店</option>
             <option value="ラピタ みなみ店|22">みなみ店</option>
             <option value="ラピタ 平田店|22">平田店</option>
+          </optgroup>
+          <optgroup label="━ 直接取引（手数料なし）">
+            <option value="ひまわり福祉会|0">ひまわり福祉会</option>
+            <option value="田中豆腐店|0">田中豆腐店</option>
           </optgroup>
         </select>
       </div>
