@@ -693,6 +693,28 @@
       font-size: 48px;
       font-weight: 800;
       color: var(--green-dark);
+      position: relative;
+    }
+    .schedule-date .sch-date-btn {
+      display: inline-block;
+      cursor: pointer;
+      padding: 10px 24px;
+      border-radius: 20px;
+      background: transparent;
+      border: 3px solid transparent;
+      transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .schedule-date .sch-date-btn:hover,
+    .schedule-date .sch-date-btn:active {
+      background: #e8f5e9;
+      border-color: #81c784;
+    }
+    .schedule-date .sch-date-btn::after {
+      content: ' 📅';
+      font-size: 0.6em;
+      vertical-align: middle;
+      opacity: 0.6;
     }
     .schedule-date .sch-sub {
       display: block;
@@ -700,6 +722,28 @@
       font-weight: 500;
       color: var(--subtext);
       margin-top: 4px;
+    }
+    .schedule-date .sch-today-btn {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 8px 20px;
+      background: #2e7d32;
+      color: #fff;
+      border: none;
+      border-radius: 30px;
+      font-size: 24px;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .schedule-date .sch-today-btn:active { background: #1b5e20; }
+    /* 非表示の日付ピッカー（ボタンから開く） */
+    #sch-date-picker {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+      width: 1px;
+      height: 1px;
     }
 
     /* セクションカード */
@@ -1223,6 +1267,8 @@
       /* ---- 予定タブ ---- */
       .schedule-date { font-size: 24px; padding: 14px 14px 4px; }
       .schedule-date .sch-sub { font-size: 14px; margin-top: 2px; }
+      .schedule-date .sch-date-btn { padding: 6px 14px; border-radius: 12px; border-width: 2px; }
+      .schedule-date .sch-today-btn { font-size: 14px; padding: 5px 14px; margin-top: 6px; border-radius: 18px; }
       .sch-card { border-radius: 14px; margin: 10px 10px; }
       .sch-header { font-size: 18px !important; padding: 14px 14px 8px; gap: 8px; }
       .sch-header .sch-icon { font-size: 22px; }
@@ -1957,12 +2003,13 @@ window.onload = () => {
   }
 
   // 1分ごとに日付をチェック。日付が変わったら自動更新し予定も再読込
+  // ただし、ユーザーが過去・未来の日付を閲覧中なら自動で今日に戻さない
   setInterval(() => {
     const today = localDateStr();
     if (today !== _lastShownDate) {
       _lastShownDate = today;
       refreshToToday();
-      if (document.body.classList.contains('schedule-mode')) {
+      if (document.body.classList.contains('schedule-mode') && !_currentScheduleDate) {
         loadSchedule();
       }
     }
@@ -1976,7 +2023,7 @@ document.addEventListener('visibilitychange', () => {
     if (today !== _lastShownDate) {
       _lastShownDate = today;
       refreshToToday();
-      if (document.body.classList.contains('schedule-mode')) {
+      if (document.body.classList.contains('schedule-mode') && !_currentScheduleDate) {
         loadSchedule();
       }
     }
@@ -2021,6 +2068,10 @@ function showPanel(name, btn){
   btn.classList.add('active');
   // 予定タブの時は記録者バーを隠す
   document.body.classList.toggle('schedule-mode', name === 'schedule');
+  // 予定タブを開いたら、過去・未来を閲覧中なら今日に戻す
+  if (name === 'schedule' && _currentScheduleDate) {
+    loadSchedule();  // 今日の予定を読み込み
+  }
   window.scrollTo({top:0, behavior:'instant'});
 }
 
@@ -2208,7 +2259,11 @@ async function postWithCheck(payload) {
     return post(payload);
   }
   try {
-    const res = await checkDup({ formType: payload.formType, date: payload.date });
+    // 重複チェックに必要なフィールドだけ抽出して送る
+    const checkPayload = { formType: payload.formType, date: payload.date };
+    // 温度記録は朝夕を識別するのでtimeOfDayも送る
+    if (payload.timeOfDay) checkPayload.timeOfDay = payload.timeOfDay;
+    const res = await checkDup(checkPayload);
     if (res && res.duplicates && res.duplicates.length > 0) {
       const ok = await showDupDialog(res.duplicates);
       if (!ok) {
@@ -2483,17 +2538,55 @@ function clear(...ids){ ids.forEach(id=>{ document.getElementById(id).value=''; 
 /* ===================================================
    予定タブ — 作業予定の読み込み・描画
 =================================================== */
-function loadSchedule() {
-  // 予定データと記録チェックを並列取得
-  const p1 = callAPI('getTodaySchedule');
-  const p2 = callAPI('checkTodayRecords').catch(() => null);  // チェック失敗しても予定は表示
+// 現在表示中の日付（予定タブ）
+let _currentScheduleDate = null;  // null = 今日
+
+function loadSchedule(dateStr) {
+  _currentScheduleDate = dateStr || null;
+  const todayStr = localDateStr();
+  const isToday = !dateStr || dateStr === todayStr;
+
+  // ローディング表示
+  const loading = document.getElementById('sch-loading');
+  const content = document.getElementById('sch-content');
+  loading.style.display = 'block';
+  loading.innerHTML = '<div class="spinner"></div><div>作業予定を読み込み中…</div>';
+  content.style.display = 'none';
+
+  // 予定データを取得（今日なら getTodaySchedule、それ以外は getScheduleForDate）
+  const p1 = isToday
+    ? callAPI('getTodaySchedule')
+    : callAPI('getScheduleForDate', { date: dateStr });
+  // 記録チェックは今日だけ実施
+  const p2 = isToday
+    ? callAPI('checkTodayRecords').catch(() => null)
+    : Promise.resolve(null);
+
   Promise.all([p1, p2])
     .then(([schedule, recStatus]) => renderSchedule(schedule, recStatus))
     .catch(err => {
-      document.getElementById('sch-loading').innerHTML =
+      loading.innerHTML =
         '<div style="font-size:36px;color:#c62828;">読み込みエラー</div>' +
         '<div style="font-size:26px;color:#8e8e93;margin-top:12px;">' + err.message + '</div>';
     });
+}
+
+// 日付ピッカーを開く
+function openDatePicker() {
+  const picker = document.getElementById('sch-date-picker');
+  if (!picker) return;
+  // showPicker() が使えるブラウザはそれを使う、ダメならclick()
+  if (typeof picker.showPicker === 'function') {
+    try { picker.showPicker(); return; } catch (e) { /* fallback */ }
+  }
+  picker.focus();
+  picker.click();
+}
+
+// 日付変更時の処理
+function onScheduleDateChange(dateStr) {
+  if (!dateStr) return;
+  loadSchedule(dateStr);
 }
 
 /* 列リスト({container,col}[]) をコンテナごとにまとめたバッジHTMLに変換
@@ -2533,11 +2626,18 @@ function renderSchedule(s, recStatus) {
 
   let html = '';
 
-  // --- 日付ヘッダー ---
+  // --- 日付ヘッダー（クリックで日付選択） ---
   const md = s.date.slice(5).replace('-', '/');
-  html += '<div class="schedule-date">' + md + '（' + s.dayOfWeek + '）';
+  const todayStr = localDateStr();
+  const isToday = (s.date === todayStr);
+  html += '<div class="schedule-date">';
+  html += '<span class="sch-date-btn" onclick="openDatePicker()">' + md + '（' + s.dayOfWeek + '）</span>';
+  html += '<input type="date" id="sch-date-picker" value="' + s.date + '" onchange="onScheduleDateChange(this.value)">';
   if (s.isHoliday) html += '<span class="sch-sub">祝日</span>';
   if (s.mondayIsHoliday && !s.isHoliday) html += '<span class="sch-sub">※ 今週月曜は祝日のため曜日シフト</span>';
+  if (!isToday) {
+    html += '<br><button type="button" class="sch-today-btn" onclick="onScheduleDateChange(\'' + todayStr + '\')">今日に戻る</button>';
+  }
   html += '</div>';
 
   // --- ⚠️ 記録忘れアラート（未記録あれば最上部に表示）---
