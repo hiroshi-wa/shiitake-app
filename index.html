@@ -920,7 +920,7 @@
       color: #e65100;
     }
 
-    /* 正転リスト */
+    /* 正転リスト（旧形式、互換用） */
     .flip-list {
       list-style: none;
       padding: 0;
@@ -942,6 +942,62 @@
       font-weight: 800;
       font-size: 30px;
       color: #1565c0;
+    }
+
+    /* ★ 正転: コンテナごとのボックス表示 */
+    .flip-containers {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 8px;
+    }
+    .flip-container-box {
+      background: #fafafa;
+      border: 3px solid #ffb74d;
+      border-radius: 16px;
+      padding: 18px 14px;
+    }
+    .flip-container-title {
+      font-size: 30px;
+      font-weight: 800;
+      color: #bf360c;
+      text-align: center;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 2px dashed #ffcc80;
+    }
+    .flip-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .flip-row:last-child { border-bottom: none; }
+    .flip-col-label {
+      display: inline-block;
+      min-width: 70px;
+      font-size: 28px;
+      font-weight: 800;
+      color: #e65100;
+      text-align: center;
+      background: #fff3e0;
+      border-radius: 10px;
+      padding: 4px 10px;
+      flex-shrink: 0;
+    }
+    .flip-row .sch-badge {
+      flex: 1;
+      margin: 0;
+      font-size: 26px;
+      padding: 8px 14px;
+      text-align: center;
+    }
+    .flip-empty {
+      text-align: center;
+      color: #bdbdbd;
+      font-size: 24px;
+      padding: 14px 0;
     }
 
     /* 菌床サマリーテーブル */
@@ -1306,9 +1362,37 @@
       /* バッジ（コンテナごとの列表示） */
       .sch-badge { font-size: 20px; padding: 6px 14px; border-radius: 18px; margin: 3px 3px; font-weight: 700; }
 
-      /* 正転リスト */
+      /* 正転リスト（旧） */
       .flip-list li { font-size: 15px; padding: 6px 0; gap: 8px; }
       .flip-col     { width: 48px; font-size: 16px; }
+
+      /* ★ 正転: コンテナボックス（モバイルは縦並び） */
+      .flip-containers {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .flip-container-box {
+        padding: 12px 10px;
+        border-radius: 12px;
+        border-width: 2px;
+      }
+      .flip-container-title {
+        font-size: 17px;
+        margin-bottom: 8px;
+        padding-bottom: 6px;
+      }
+      .flip-row { padding: 6px 0; gap: 8px; }
+      .flip-col-label {
+        min-width: 44px;
+        font-size: 15px;
+        padding: 3px 8px;
+        border-radius: 7px;
+      }
+      .flip-row .sch-badge {
+        font-size: 14px;
+        padding: 5px 10px;
+      }
+      .flip-empty { font-size: 13px; padding: 8px 0; }
 
       /* 菌床サマリー */
       .bed-summary-row { font-size: 14px; padding: 8px 10px; gap: 6px; border-radius: 8px; }
@@ -2744,20 +2828,32 @@ function renderSchedule(s, recStatus) {
   html += '<div class="sch-body">';
   if (s.flipDay && s.flipDetails && s.flipDetails.length > 0) {
     html += '<div style="font-size:32px;font-weight:700;color:#e65100;margin-bottom:14px;">今日は正転日！</div>';
-    // 正転の種類ごとにグループ化（種類が異なる列は別表示）
-    const byType = {};
+    // コンテナごとにグループ化
+    const flipByContainer = {};
     s.flipDetails.forEach(f => {
-      if (!byType[f.type]) byType[f.type] = [];
-      byType[f.type].push({ container: f.container, col: f.col });
+      if (!flipByContainer[f.container]) flipByContainer[f.container] = [];
+      flipByContainer[f.container].push(f);
     });
-    Object.keys(byType).forEach(tp => {
-      let cls = 'flip';
-      if (tp.indexOf('給水なし') >= 0 || tp.indexOf('パック外し') >= 0) cls = 'flip-water';
-      html += '<div style="margin-bottom:14px;">';
-      html += '<div style="font-size:28px;font-weight:700;color:#6d4c41;margin-bottom:6px;">' + tp + '</div>';
-      html += '<div>' + groupByContainer(byType[tp], cls) + '</div>';
+    html += '<div class="flip-containers">';
+    [1, 2, 3].forEach(c => {
+      const items = (flipByContainer[c] || []).slice().sort((a,b) => a.col.localeCompare(b.col));
+      html += '<div class="flip-container-box">';
+      html += '<div class="flip-container-title">第' + c + 'コンテナ</div>';
+      if (items.length === 0) {
+        html += '<div class="flip-empty">対象なし</div>';
+      } else {
+        items.forEach(f => {
+          let cls = 'flip';
+          if (f.type.indexOf('給水なし') >= 0 || f.type.indexOf('パック外し') >= 0) cls = 'flip-water';
+          html += '<div class="flip-row">';
+          html += '<span class="flip-col-label">' + f.col + '列</span>';
+          html += '<span class="sch-badge ' + cls + '">' + f.type + '</span>';
+          html += '</div>';
+        });
+      }
       html += '</div>';
     });
+    html += '</div>';
   } else if (s.flipDay) {
     html += '<div style="font-size:30px;color:#8e8e93;">正転対象なし</div>';
   } else {
