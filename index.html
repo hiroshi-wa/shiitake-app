@@ -1,0 +1,2425 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="しいたけ管理">
+  <meta name="theme-color" content="#2e7d32">
+  <!-- PWAマニフェスト・アイコン（GitHub Pages版） -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <title>しいたけ栽培管理</title>
+  <style>
+    :root {
+      --green:       #2e7d32;
+      --green-dark:  #1b5e20;
+      --green-light: #e8f5e9;
+      --green-mid:   #4caf50;
+      --bg:          #f2f2f7;
+      --card:        #ffffff;
+      --border:      #c6c6c8;
+      --text:        #1c1c1e;
+      --subtext:     #8e8e93;
+      --danger:      #c62828;
+      --warn:        #e65100;
+
+      --sat: env(safe-area-inset-top,    0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+      --sal: env(safe-area-inset-left,   0px);
+      --sar: env(safe-area-inset-right,  0px);
+
+      --navbar-h: 124px;
+      --recorder-h: 110px;
+      --tabbar-h: 210px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+    }
+
+    body {
+      font-family: -apple-system, "Hiragino Sans", "SF Pro Text", sans-serif;
+      background: #f2f2f7;
+      color: #1c1c1e;
+      min-height: 100%;
+      overflow-x: hidden;
+    }
+
+    /* ============================================================
+       ナビゲーションバー（上部固定）
+    ============================================================ */
+    #navbar {
+      position: fixed !important;
+      top: 0 !important; left: 0 !important; right: 0 !important;
+      z-index: 9998 !important;
+      background: #2e7d32 !important;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    }
+    #navbar-inner {
+      height: 124px !important;
+      display: flex !important;
+      align-items: center !important;
+      padding: 0 36px !important;
+      gap: 16px;
+    }
+    #navbar-icon { font-size: 62px !important; line-height: 1; }
+    #navbar-title {
+      flex: 1;
+      font-size: 44px !important;
+      font-weight: 700 !important;
+      color: #ffffff !important;
+    }
+    #navbar-sub {
+      font-size: 30px !important;
+      color: rgba(255,255,255,0.85) !important;
+      font-weight: 600 !important;
+    }
+
+    /* ============================================================
+       記録者バー（ナビバー直下固定）
+    ============================================================ */
+    #recorder-bar {
+      position: fixed !important;
+      top: calc(var(--sat) + var(--navbar-h)) !important;
+      left: 0 !important; right: 0 !important;
+      z-index: 9997 !important;
+      background: #e8f5e9 !important;
+      border-bottom: 2px solid #81c784;
+      height: var(--recorder-h);
+      display: flex !important;
+      align-items: center !important;
+      padding: 0 28px !important;
+      gap: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    #recorder-bar .rec-label {
+      font-size: 34px !important;
+      font-weight: 700 !important;
+      color: #1b5e20 !important;
+      flex-shrink: 0;
+    }
+    #recorder-bar .rec-icon {
+      font-size: 42px;
+    }
+    #recorder-bar select {
+      flex: 1;
+      height: 80px;
+      border: 2px solid #2e7d32;
+      border-radius: 18px;
+      background: #ffffff;
+      font-size: 34px;
+      font-weight: 600;
+      color: #1b5e20;
+      padding: 0 18px;
+      outline: none;
+      font-family: inherit;
+    }
+    #recorder-bar select:invalid {
+      color: #c62828;
+      border-color: #c62828;
+      background: #ffebee;
+    }
+
+    /* 予定タブ表示中は記録者バーを隠す */
+    body.schedule-mode #recorder-bar { display: none !important; }
+
+    /* ============================================================
+       コンテンツ領域
+    ============================================================ */
+    #content {
+      padding-top: calc(var(--sat) + var(--navbar-h) + var(--recorder-h) + 10px);
+      padding-bottom: 225px;
+      padding-left: 0;
+      padding-right: 0;
+      max-width: 100%;
+      margin: 0;
+    }
+    body.schedule-mode #content {
+      padding-top: calc(var(--sat) + var(--navbar-h) + 10px);
+    }
+
+    /* ============================================================
+       タブバー（下部固定）
+    ============================================================ */
+    #tabbar {
+      position: fixed !important;
+      bottom: 0 !important;
+      left: 0 !important; right: 0 !important;
+      z-index: 9999 !important;
+      background: #ffffff !important;
+      border-top: 1px solid #c6c6c8;
+      padding-bottom: 16px;
+      padding-top: 10px;
+      display: flex !important;
+      box-shadow: 0 -2px 16px rgba(0,0,0,0.12);
+      height: 210px;
+      align-items: flex-start;
+    }
+    .tab-btn {
+      flex: 1 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      gap: 8px !important;
+      background: none !important;
+      border: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      outline: none;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .t-icon-wrap {
+      width: 100px !important;
+      height: 68px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border-radius: 34px !important;
+      background: transparent !important;
+      flex-shrink: 0;
+    }
+    .tab-btn .t-icon {
+      font-size: 90px !important;
+      line-height: 1 !important;
+      display: block !important;
+    }
+    .tab-btn .t-label {
+      font-size: 28px !important;
+      font-weight: 500 !important;
+      line-height: 1 !important;
+      color: #8e8e93 !important;
+      display: block !important;
+      white-space: nowrap;
+    }
+    .tab-btn.active .t-icon-wrap {
+      background: #c8e6c9 !important;
+    }
+    .tab-btn.active .t-label {
+      color: #1b5e20 !important;
+      font-weight: 700 !important;
+    }
+
+    /* ============================================================
+       パネル切り替えアニメーション
+    ============================================================ */
+    .panel { display: none; animation: fadeIn 0.18s ease; }
+    .panel.active {
+      display: block;
+      min-height: 0;
+    }
+    html, body { height: auto; min-height: 100%; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ============================================================
+       カード
+    ============================================================ */
+    .section-label {
+      font-size: 33px !important;
+      font-weight: 600;
+      color: #6e6e73;
+      margin: 48px 0 18px 20px;
+      display: block;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 26px;
+      overflow: hidden;
+      margin-bottom: 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      min-height: 120px;
+      padding: 0 36px;
+      border-bottom: 1px solid #e5e5ea;
+      gap: 20px;
+    }
+    .row:last-child { border-bottom: none; }
+    .row-label {
+      font-size: 38px !important;
+      font-weight: 500;
+      color: #1c1c1e;
+      flex-shrink: 0;
+      min-width: 200px;
+    }
+    .row-label .row-unit {
+      font-size: 28px !important;
+      font-weight: 400;
+      color: #8e8e93;
+      display: block;
+      margin-top: 4px;
+    }
+    .row input,
+    .row select,
+    .row textarea {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 38px !important;
+      font-family: inherit;
+      color: #1c1c1e;
+      text-align: right;
+      min-width: 0;
+      padding: 30px 0;
+      height: 120px;
+    }
+    .row select {
+      text-align-last: right;
+      direction: rtl;
+      color: var(--subtext);
+    }
+    .row select option { direction: ltr; }
+    .row textarea {
+      text-align: left;
+      height: auto;
+      min-height: 160px;
+      padding: 26px 0;
+      resize: none;
+    }
+    .row input[type="date"],
+    .row input[type="time"] {
+      color: var(--green-dark);
+      font-weight: 500;
+    }
+    ::placeholder { color: #c7c7cc; }
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+    /* 自動計算バッジ */
+    .calc-badge {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--green);
+      background: var(--green-light);
+      border-radius: 44px;
+      padding: 6px 20px;
+      white-space: nowrap;
+      display: none;
+    }
+    .calc-badge.show { display: inline-block; }
+
+    /* 歩留まり表示行 */
+    .yield-row {
+      padding: 8px 16px;
+      background: var(--green-light);
+      display: none;
+      border-bottom: 0.5px solid #e5e5ea;
+    }
+    .yield-row.show { display: block; }
+    .yield-row span { font-size: 13px; color: var(--green-dark); font-weight: 600; }
+
+    /* 2カラムグリッド */
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; }
+    .grid2 .row { border-right: 0.5px solid #e5e5ea; }
+    .grid2 .row:nth-child(2n) { border-right: none; }
+
+    /* ============================================================
+       3カラムグリッド（コンテナ温度・湿度用）
+       ★ 修正: スマホでNo.3が見切れないようパディングを縮小・
+                ラベルの min-width を上書き
+    ============================================================ */
+    .grid3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+    .grid3 .row {
+      border-right: 0.5px solid #e5e5ea;
+      justify-content: center;
+      flex-direction: column;
+      align-items: flex-start;
+      /* ★ 修正: 左右パディングを大幅に縮小 */
+      padding: 20px 12px;
+      min-height: 110px;
+      gap: 6px;
+    }
+    .grid3 .row:nth-child(3n) { border-right: none; }
+    /* ★ 修正: grid3内のラベルはmin-widthをリセットしてフォントも小さく */
+    .grid3 .row .row-label {
+      min-width: 0 !important;
+      font-size: 30px !important;
+      color: #8e8e93;
+      font-weight: 600;
+    }
+    /* ★ 修正: grid3内の入力欄を幅いっぱいに・フォント調整 */
+    .grid3 .row input {
+      text-align: left;
+      width: 100%;
+      font-size: 36px !important;
+      font-weight: 700;
+      color: var(--green-dark);
+      padding: 0;
+      height: auto;
+    }
+
+    /* ============================================================
+       天候ボタン
+       ★ 修正: 高さ・文字を大幅に拡大してタップしやすく
+    ============================================================ */
+    .weather-wrap {
+      padding: 20px 16px 24px;
+      display: flex;
+      gap: 10px;
+    }
+    .w-btn {
+      flex: 1;
+      /* ★ 修正: 44px → 110px */
+      height: 110px;
+      border-radius: 22px;
+      border: 2px solid var(--border);
+      background: #fafafa;
+      /* ★ 修正: 15px → 32px */
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--subtext);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.12s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .w-btn .w-emoji { font-size: 44px; line-height: 1; }
+    .w-btn .w-label { font-size: 28px; }
+    .w-btn.on {
+      background: var(--green-light);
+      border-color: var(--green);
+      border-width: 3px;
+      color: var(--green-dark);
+    }
+
+    /* ============================================================
+       朝/夕トグル
+       ★ 修正: 高さ・文字を大幅に拡大してタップしやすく
+    ============================================================ */
+    .seg-wrap { padding: 16px 16px 4px; }
+    .seg {
+      display: flex;
+      background: #e9e9eb;
+      border-radius: 22px;
+      padding: 4px;
+      gap: 4px;
+    }
+    .seg-btn {
+      flex: 1;
+      /* ★ 修正: 34px → 100px */
+      height: 100px;
+      border: none;
+      border-radius: 18px;
+      background: transparent;
+      /* ★ 修正: 15px → 38px */
+      font-size: 38px;
+      font-weight: 700;
+      color: var(--subtext);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.18s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .seg-btn.active {
+      background: #fff;
+      color: var(--green-dark);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+
+    /* ============================================================
+       手数料バッジ
+    ============================================================ */
+    .fee-row {
+      padding: 8px 16px;
+      background: #fff3e0;
+      display: none;
+      border-bottom: 0.5px solid #e5e5ea;
+    }
+    .fee-row.show { display: flex; align-items: center; gap: 6px; }
+    .fee-row span { font-size: 14px; font-weight: 700; color: var(--warn); }
+
+    /* ============================================================
+       送信ボタン
+    ============================================================ */
+    .submit-btn {
+      width: 100%;
+      height: 116px;
+      margin-top: 44px;
+      margin-bottom: 8px;
+      background: var(--green);
+      color: #fff;
+      font-size: 38px;
+      font-weight: 700;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.1s, background 0.15s;
+      box-shadow: 0 2px 10px rgba(46,125,50,0.35);
+      letter-spacing: 0.02em;
+    }
+    .submit-btn:active { transform: scale(0.97); background: var(--green-dark); }
+    .submit-btn:disabled { background: #aaa; box-shadow: none; cursor: not-allowed; }
+
+    /* ============================================================
+       送信完了オーバーレイ（★ 修正: 大きく目立つ表示に変更）
+    ============================================================ */
+    #result-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      pointer-events: none;
+    }
+    #result-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #result-card {
+      background: #fff;
+      border-radius: 40px;
+      padding: 70px 50px 60px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      width: 80vw;
+      max-width: 600px;
+      box-shadow: 0 16px 60px rgba(0, 0, 0, 0.35);
+      transform: scale(0.85);
+      transition: transform 0.22s ease;
+    }
+    #result-overlay.show #result-card {
+      transform: scale(1);
+    }
+    #result-icon   { font-size: 110px; line-height: 1; }
+    #result-title  { font-size: 52px; font-weight: 800; }
+    #result-sub    { font-size: 34px; font-weight: 500; color: var(--subtext); }
+    /* 成功 */
+    #result-overlay.success #result-title { color: var(--green-dark); }
+    #result-overlay.success #result-card  { border-top: 10px solid var(--green); }
+    /* エラー */
+    #result-overlay.error #result-title { color: var(--danger); }
+    #result-overlay.error #result-card  { border-top: 10px solid var(--danger); }
+
+    /* エラートースト（小さいエラー表示は残す） */
+    #toast {
+      position: fixed;
+      bottom: calc(var(--sab) + var(--tabbar-h) + 20px);
+      left: 50%; transform: translateX(-50%) translateY(10px);
+      background: var(--danger);
+      color: #fff;
+      padding: 18px 30px;
+      border-radius: 16px;
+      font-size: 30px;
+      font-weight: 600;
+      z-index: 10001;
+      opacity: 0;
+      transition: all 0.25s;
+      pointer-events: none;
+      white-space: nowrap;
+      max-width: 90vw;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .row input[readonly] { color: var(--subtext); }
+
+    /* ============================================================
+       作業記録（パック浸水・正転）グループ選択ボタン
+    ============================================================ */
+    .work-section {
+      padding: 24px 28px 20px;
+    }
+    .work-title {
+      font-size: 34px;
+      font-weight: 700;
+      color: #1c1c1e;
+      margin-bottom: 18px;
+    }
+    .group-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .grp-btn {
+      height: 88px;
+      border-radius: 18px;
+      border: 2px solid var(--border);
+      background: #fafafa;
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--subtext);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.14s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .grp-btn.on {
+      background: #e3f2fd;
+      border-color: #1565C0;
+      border-width: 3px;
+      color: #0d47a1;
+    }
+    /* 浸水側はブルー、正転側はオレンジで区別 */
+    #flip-grid .grp-btn.on {
+      background: #fff3e0;
+      border-color: #e65100;
+      color: #bf360c;
+    }
+
+    /* 除外列アコーディオン */
+    .excl-toggle {
+      width: 100%;
+      padding: 18px 20px;
+      background: #fffde7;
+      border: none;
+      border-top: 1px solid #e5e5ea;
+      font-size: 26px;
+      color: #f57f17;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .excl-toggle .excl-arrow {
+      margin-left: auto;
+      font-size: 22px;
+      transition: transform 0.2s;
+      color: #bbb;
+    }
+    .excl-toggle.open .excl-arrow { transform: rotate(180deg); }
+    .excl-panel {
+      display: none;
+      padding: 16px 20px 20px;
+      background: #fffde7;
+      border-top: 1px solid #fff176;
+    }
+    .excl-panel.open { display: block; }
+    .excl-note {
+      font-size: 22px;
+      color: #795548;
+      margin-bottom: 14px;
+    }
+    .excl-cont-label {
+      font-size: 24px;
+      font-weight: 700;
+      color: #795548;
+      margin: 14px 0 8px;
+    }
+    .excl-cont-label:first-of-type { margin-top: 0; }
+    .col-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+    }
+    .col-btn {
+      height: 72px;
+      border-radius: 14px;
+      border: 2px solid #e0e0e0;
+      background: #fafafa;
+      font-size: 28px;
+      font-weight: 700;
+      color: #9e9e9e;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.14s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .col-btn.on {
+      background: #ffebee;
+      border-color: #c62828;
+      border-width: 3px;
+      color: #b71c1c;
+    }
+
+    /* 平均表示 */
+    .avg-row {
+      padding: 10px 16px;
+      background: var(--green-light);
+      border-top: 0.5px solid #c8e6c9;
+    }
+    .avg-row p { font-size: 14px; font-weight: 700; color: var(--green-dark); }
+
+    /* ============================================================
+       予定タブ — 今日の作業予定
+    ============================================================ */
+    .schedule-date {
+      text-align: center;
+      padding: 32px 20px 8px;
+      font-size: 48px;
+      font-weight: 800;
+      color: var(--green-dark);
+    }
+    .schedule-date .sch-sub {
+      display: block;
+      font-size: 28px;
+      font-weight: 500;
+      color: var(--subtext);
+      margin-top: 4px;
+    }
+
+    /* セクションカード */
+    .sch-card {
+      background: var(--card);
+      border-radius: 22px;
+      margin: 14px 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    }
+    /* 記録忘れ警告カード（最も目立つ） */
+    .sch-card.rec-alert {
+      background: #fff3e0 !important;
+      border: 5px solid #e65100;
+      box-shadow: 0 6px 20px rgba(230,81,0,0.4);
+    }
+    .sch-card.rec-alert .sch-header {
+      font-size: 38px !important;
+    }
+    .rec-alert-item {
+      padding: 16px 20px;
+      margin: 8px 0;
+      background: #fff;
+      border-radius: 14px;
+      border-left: 6px solid #e65100;
+    }
+    .rec-alert-label {
+      display: block;
+      font-size: 32px;
+      font-weight: 800;
+      color: #bf360c;
+      margin-bottom: 4px;
+    }
+    .rec-alert-detail {
+      display: block;
+      font-size: 26px;
+      color: #6d4c41;
+    }
+
+    /* 当日作業が必要なカードを強調 */
+    .sch-card.today-active {
+      background: #ffebee !important;
+      border: 4px solid #c62828;
+      box-shadow: 0 4px 16px rgba(198,40,40,0.35);
+      animation: todayPulse 2s ease-in-out infinite;
+    }
+    .sch-card.today-active .sch-header {
+      color: #b71c1c !important;
+      font-size: 38px !important;
+    }
+    .sch-card.today-active .sch-header::after {
+      content: '🔥 今日';
+      margin-left: auto;
+      background: #c62828;
+      color: #fff;
+      padding: 6px 20px;
+      border-radius: 30px;
+      font-size: 28px;
+      font-weight: 800;
+    }
+    @keyframes todayPulse {
+      0%, 100% { box-shadow: 0 4px 16px rgba(198,40,40,0.35); }
+      50%      { box-shadow: 0 4px 24px rgba(198,40,40,0.6); }
+    }
+
+    .sch-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 22px 24px 14px;
+      font-size: 34px;
+      font-weight: 700;
+    }
+    .sch-header .sch-icon {
+      font-size: 40px;
+      line-height: 1;
+    }
+    .sch-body {
+      padding: 0 24px 22px;
+    }
+
+    /* 色分けバッジ */
+    .sch-badge {
+      display: inline-block;
+      padding: 12px 26px;
+      border-radius: 36px;
+      font-size: 40px;
+      font-weight: 800;
+      margin: 6px 6px;
+      line-height: 1.3;
+      letter-spacing: 0.02em;
+    }
+    .sch-badge.harvest-zen {
+      background: #ffebee;
+      color: #c62828;
+      border: 2px solid #ef9a9a;
+    }
+    .sch-badge.harvest-chu {
+      background: #e3f2fd;
+      color: #1565c0;
+      border: 2px solid #90caf9;
+    }
+    .sch-badge.harvest-ko {
+      background: #f3e5f5;
+      color: #7b1fa2;
+      border: 2px solid #ce93d8;
+    }
+    .sch-badge.soak {
+      background: #e1f5fe;
+      color: #01579b;
+      border: 2px solid #4fc3f7;
+    }
+    .sch-badge.flip {
+      background: #fff3e0;
+      color: #e65100;
+      border: 2px solid #ffb74d;
+    }
+    .sch-badge.flip-water {
+      background: #fce4ec;
+      color: #880e4f;
+      border: 2px solid #f48fb1;
+    }
+    .sch-badge.spray {
+      background: #e0f2f1;
+      color: #00695c;
+      border: 2px solid #80cbc4;
+    }
+    .sch-badge.bed-in {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 2px solid #a5d6a7;
+    }
+    .sch-badge.bed-out {
+      background: #fbe9e7;
+      color: #bf360c;
+      border: 2px solid #ffab91;
+    }
+
+    /* 警告バッジ */
+    .sch-alert {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 20px;
+      margin: 8px 0;
+      background: #fff8e1;
+      border-radius: 14px;
+      border-left: 6px solid #ffa000;
+      font-size: 28px;
+      font-weight: 600;
+      color: #e65100;
+    }
+
+    /* 正転リスト */
+    .flip-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .flip-list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f5f5f5;
+      font-size: 30px;
+    }
+    .flip-list li:last-child { border-bottom: none; }
+    .flip-col {
+      display: inline-block;
+      width: 80px;
+      text-align: center;
+      font-weight: 800;
+      font-size: 30px;
+      color: #1565c0;
+    }
+
+    /* 菌床サマリーテーブル */
+    .bed-summary-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .bed-summary-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: #f9f9f9;
+      border-radius: 12px;
+      font-size: 26px;
+    }
+    .bed-summary-row .bs-group {
+      font-weight: 800;
+      font-size: 28px;
+      color: var(--green-dark);
+      min-width: 80px;
+    }
+    .bed-summary-row .bs-months {
+      font-weight: 700;
+      color: #1565c0;
+    }
+    .bed-summary-row .bs-discard {
+      margin-left: auto;
+      font-size: 24px;
+      color: var(--subtext);
+    }
+
+    /* 休日表示 */
+    .sch-off {
+      text-align: center;
+      padding: 80px 40px;
+    }
+    .sch-off .off-icon { font-size: 100px; display: block; margin-bottom: 20px; }
+    .sch-off .off-text {
+      font-size: 44px;
+      font-weight: 700;
+      color: var(--subtext);
+    }
+
+    /* ローディング */
+    .sch-loading {
+      text-align: center;
+      padding: 80px 20px;
+      font-size: 36px;
+      color: var(--subtext);
+    }
+    .sch-loading .spinner {
+      display: inline-block;
+      width: 50px;
+      height: 50px;
+      border: 5px solid #e0e0e0;
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* 次回予告 */
+    .sch-next {
+      font-size: 28px;
+      color: var(--subtext);
+      font-weight: 500;
+      padding: 6px 0;
+    }
+    .sch-next strong {
+      color: var(--text);
+    }
+
+    /* ============================================================
+       重複確認ダイアログ
+    ============================================================ */
+    #dup-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10002;
+    }
+    #dup-overlay.show { display: flex; }
+    #dup-card {
+      background: #fff;
+      border-radius: 36px;
+      padding: 50px 40px 40px;
+      width: 86vw;
+      max-width: 700px;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 16px 60px rgba(0,0,0,0.4);
+      border-top: 10px solid #e65100;
+    }
+    #dup-card .dup-icon {
+      font-size: 80px;
+      text-align: center;
+      display: block;
+      margin-bottom: 16px;
+    }
+    #dup-card .dup-title {
+      font-size: 44px;
+      font-weight: 800;
+      color: #e65100;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    #dup-card .dup-msg {
+      font-size: 30px;
+      color: #333;
+      margin-bottom: 20px;
+      text-align: center;
+      line-height: 1.5;
+    }
+    #dup-list {
+      background: #fff8e1;
+      border-radius: 20px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+    .dup-item {
+      padding: 14px 0;
+      border-bottom: 1px solid #ffe082;
+      font-size: 30px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .dup-item:last-child { border-bottom: none; }
+    .dup-item .dup-time {
+      font-weight: 700;
+      color: #bf360c;
+      min-width: 140px;
+    }
+    .dup-item .dup-rec {
+      font-weight: 700;
+      color: #1b5e20;
+    }
+    .dup-buttons {
+      display: flex;
+      gap: 14px;
+      margin-top: 20px;
+    }
+    .dup-btn {
+      flex: 1;
+      height: 100px;
+      border-radius: 24px;
+      border: none;
+      font-size: 32px;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .dup-btn-cancel {
+      background: #eeeeee;
+      color: #424242;
+      border: 2px solid #bdbdbd;
+    }
+    .dup-btn-submit {
+      background: #e65100;
+      color: #fff;
+    }
+    .dup-btn-submit:active { background: #bf360c; }
+    .dup-btn-cancel:active { background: #e0e0e0; }
+  </style>
+</head>
+<body class="schedule-mode">
+
+<!-- ナビゲーションバー -->
+<header id="navbar">
+  <div id="navbar-inner">
+    <span id="navbar-icon">🍄</span>
+    <span id="navbar-title">しいたけ栽培管理</span>
+    <span id="navbar-sub" id="today-label"></span>
+  </div>
+</header>
+
+<!-- 記録者バー（全タブ共通） -->
+<div id="recorder-bar">
+  <span class="rec-icon">👤</span>
+  <span class="rec-label">記録者</span>
+  <select id="recorder-select" required onchange="saveRecorder()">
+    <option value="">選択してください</option>
+    <option>板垣</option>
+    <option>今若</option>
+    <option>藤井</option>
+    <option>吉田</option>
+    <option>和多田</option>
+    <option>中村</option>
+    <option>糸賀</option>
+    <option>平尾</option>
+  </select>
+</div>
+
+<!-- 送信完了オーバーレイ（★ 修正: 大きく目立つ表示） -->
+<div id="result-overlay" onclick="hideResult()">
+  <div id="result-card">
+    <span id="result-icon">✅</span>
+    <span id="result-title">送信完了！</span>
+    <span id="result-sub">タップして閉じる</span>
+  </div>
+</div>
+
+<!-- エラー表示用トースト -->
+<div id="toast"></div>
+
+<!-- 重複確認ダイアログ -->
+<div id="dup-overlay">
+  <div id="dup-card">
+    <span class="dup-icon">⚠️</span>
+    <div class="dup-title">重複エントリあり</div>
+    <div class="dup-msg" id="dup-msg"></div>
+    <div id="dup-list"></div>
+    <div class="dup-buttons">
+      <button class="dup-btn dup-btn-cancel" onclick="cancelDupSubmit()">キャンセル</button>
+      <button class="dup-btn dup-btn-submit" onclick="confirmDupSubmit()">追加で送信</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     コンテンツ
+============================================================ -->
+<main id="content">
+
+  <!-- ===== 予定 ===== -->
+  <div class="panel active" id="panel-schedule">
+    <div class="sch-loading" id="sch-loading">
+      <div class="spinner"></div>
+      <div>作業予定を読み込み中…</div>
+    </div>
+    <div id="sch-content" style="display:none;"></div>
+  </div>
+
+  <!-- ===== 毎日 ===== -->
+  <div class="panel" id="panel-daily">
+
+    <div class="section-label">出荷日</div>
+    <div class="card">
+      <div class="row">
+        <span class="row-label">日付</span>
+        <input type="date" id="d-date">
+      </div>
+    </div>
+
+    <div class="section-label">出荷分</div>
+    <div class="card">
+      <div class="row">
+        <span class="row-label">パック品<span class="row-unit">コンテナ数</span></span>
+        <input type="number" id="d-pack" inputmode="decimal" placeholder="0" step="0.5">
+      </div>
+      <div class="row">
+        <span class="row-label">A 品<span class="row-unit">袋数→260g</span></span>
+        <input type="number" id="d-a" inputmode="numeric" placeholder="0" oninput="calcKg('d-a','d-a-b',260)">
+        <span class="calc-badge" id="d-a-b"></span>
+      </div>
+      <div class="row">
+        <span class="row-label">B 品（袋）<span class="row-unit">袋数→310g</span></span>
+        <input type="number" id="d-b" inputmode="numeric" placeholder="0" oninput="calcKg('d-b','d-b-b',310)">
+        <span class="calc-badge" id="d-b-b"></span>
+      </div>
+      <div class="row">
+        <span class="row-label">B バラ<span class="row-unit">コンテナ→3kg</span></span>
+        <input type="number" id="d-bb" inputmode="decimal" placeholder="0" step="0.5" oninput="calcKg('d-bb','d-bb-b',3000)">
+        <span class="calc-badge" id="d-bb-b"></span>
+      </div>
+    </div>
+
+    <div class="section-label">社内販売分</div>
+    <div class="card">
+      <div class="row">
+        <span class="row-label">A 品<span class="row-unit">g</span></span>
+        <input type="number" id="d-ia" inputmode="numeric" placeholder="0">
+      </div>
+      <div class="row">
+        <span class="row-label">B 品<span class="row-unit">g</span></span>
+        <input type="number" id="d-ib" inputmode="numeric" placeholder="0">
+      </div>
+      <div class="row">
+        <span class="row-label">C 品<span class="row-unit">g</span></span>
+        <input type="number" id="d-ic" inputmode="numeric" placeholder="0">
+      </div>
+    </div>
+
+    <!-- ===== 作業記録（パック浸水・正転） ===== -->
+    <div class="section-label">作業記録（今日行った作業）</div>
+    <div class="card">
+      <!-- パック浸水 -->
+      <div class="work-section">
+        <div class="work-title">💧 パック浸水したグループ</div>
+        <div class="group-grid" id="soak-grid">
+          <button class="grp-btn" onclick="toggleGrp(this,'soak','1-ADE')">1-ADE</button>
+          <button class="grp-btn" onclick="toggleGrp(this,'soak','1-BCF')">1-BCF</button>
+          <button class="grp-btn" onclick="toggleGrp(this,'soak','2-ADE')">2-ADE</button>
+          <button class="grp-btn" onclick="toggleGrp(this,'soak','2-BCF')">2-BCF</button>
+          <button class="grp-btn" onclick="toggleGrp(this,'soak','3-ADE')">3-ADE</button>
+          <button class="grp-btn" onclick="toggleGrp(this,'soak','3-BCF')">3-BCF</button>
+        </div>
+        <!-- 除外列アコーディオン -->
+        <button class="excl-toggle" id="excl-toggle-btn" onclick="toggleExclPanel()">
+          ⚠️ 一部の列を除外する
+          <span class="excl-arrow">▼</span>
+        </button>
+        <div class="excl-panel" id="excl-panel">
+          <div class="excl-note">浸水しなかった列をタップ（赤＝除外）</div>
+          <div class="excl-cont-label">No.1</div>
+          <div class="col-grid">
+            <button class="col-btn" onclick="toggleExcl(this,'1-A')">A</button>
+            <button class="col-btn" onclick="toggleExcl(this,'1-B')">B</button>
+            <button class="col-btn" onclick="toggleExcl(this,'1-C')">C</button>
+            <button class="col-btn" onclick="toggleExcl(this,'1-D')">D</button>
+            <button class="col-btn" onclick="toggleExcl(this,'1-E')">E</button>
+            <button class="col-btn" onclick="toggleExcl(this,'1-F')">F</button>
+          </div>
+          <div class="excl-cont-label">No.2</div>
+          <div class="col-grid">
+            <button class="col-btn" onclick="toggleExcl(this,'2-A')">A</button>
+            <button class="col-btn" onclick="toggleExcl(this,'2-B')">B</button>
+            <button class="col-btn" onclick="toggleExcl(this,'2-C')">C</button>
+            <button class="col-btn" onclick="toggleExcl(this,'2-D')">D</button>
+            <button class="col-btn" onclick="toggleExcl(this,'2-E')">E</button>
+            <button class="col-btn" onclick="toggleExcl(this,'2-F')">F</button>
+          </div>
+          <div class="excl-cont-label">No.3</div>
+          <div class="col-grid">
+            <button class="col-btn" onclick="toggleExcl(this,'3-A')">A</button>
+            <button class="col-btn" onclick="toggleExcl(this,'3-B')">B</button>
+            <button class="col-btn" onclick="toggleExcl(this,'3-C')">C</button>
+            <button class="col-btn" onclick="toggleExcl(this,'3-D')">D</button>
+            <button class="col-btn" onclick="toggleExcl(this,'3-E')">E</button>
+            <button class="col-btn" onclick="toggleExcl(this,'3-F')">F</button>
+          </div>
+        </div>
+      </div>
+      <!-- 正転 -->
+      <div class="work-section" style="border-top: 1px solid #e5e5ea;">
+        <div class="work-title">🔄 正転したグループ</div>
+        <div class="group-grid" id="flip-grid">
+          <button class="grp-btn" onclick="toggleGrp(this,'flip','1-ADE')">1-ADE</button>
+          <button class="grp-btn" onclick="toggleGrp(this,'flip','1-BCF')">1-BCF</button>
+          <button class="grp-btn" onclick="toggleGrp(this,'flip','2-ADE')">2-ADE</button>
+          <button class="grp-btn" onclick="toggleGrp(this,'flip','2-BCF')">2-BCF</button>
+          <button class="grp-btn" onclick="toggleGrp(this,'flip','3-ADE')">3-ADE</button>
+          <button class="grp-btn" onclick="toggleGrp(this,'flip','3-BCF')">3-BCF</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">メモ</div>
+    <div class="card">
+      <div class="row">
+        <textarea id="d-memo" placeholder="気になることがあれば…"></textarea>
+      </div>
+    </div>
+
+    <button class="submit-btn" onclick="submitDaily(event)">✅ 送信する</button>
+  </div>
+
+  <!-- ===== 温度記録 ===== -->
+  <div class="panel" id="panel-temp">
+
+    <div class="section-label">日時・天候</div>
+    <div class="card">
+      <div class="row">
+        <span class="row-label">日付</span>
+        <input type="date" id="t-date">
+      </div>
+      <div class="row">
+        <span class="row-label">時刻</span>
+        <input type="time" id="t-time">
+      </div>
+
+      <!-- ★ 修正: 朝/夕ボタン — 大きくしてタップしやすく -->
+      <div class="seg-wrap" style="padding-bottom:16px;">
+        <div class="seg">
+          <button class="seg-btn active" id="seg-m" onclick="setTod('morning')">🌅 朝</button>
+          <button class="seg-btn"        id="seg-e" onclick="setTod('evening')">🌆 夕方</button>
+        </div>
+      </div>
+
+      <!-- ★ 修正: 天候ボタン — 大きくしてタップしやすく（絵文字＋テキスト縦並び） -->
+      <div class="weather-wrap">
+        <button class="w-btn" onclick="toggleW(this,'晴')">
+          <span class="w-emoji">☀️</span><span class="w-label">晴</span>
+        </button>
+        <button class="w-btn" onclick="toggleW(this,'曇')">
+          <span class="w-emoji">☁️</span><span class="w-label">曇</span>
+        </button>
+        <button class="w-btn" onclick="toggleW(this,'雨')">
+          <span class="w-emoji">🌧</span><span class="w-label">雨</span>
+        </button>
+        <button class="w-btn" onclick="toggleW(this,'雪')">
+          <span class="w-emoji">❄️</span><span class="w-label">雪</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ★ 修正: コンテナ温度 — grid3のパディング縮小でNo.3が見えるように -->
+    <div class="section-label">コンテナ温度（℃）</div>
+    <div class="card grid3">
+      <div class="row">
+        <span class="row-label">No.1</span>
+        <input type="number" id="t-c1" inputmode="decimal" placeholder="—" step="0.1">
+      </div>
+      <div class="row">
+        <span class="row-label">No.2</span>
+        <input type="number" id="t-c2" inputmode="decimal" placeholder="—" step="0.1">
+      </div>
+      <div class="row">
+        <span class="row-label">No.3</span>
+        <input type="number" id="t-c3" inputmode="decimal" placeholder="—" step="0.1">
+      </div>
+    </div>
+
+    <div class="section-label">その他温度（℃）</div>
+    <div class="card">
+      <div class="row">
+        <span class="row-label">冷蔵庫</span>
+        <input type="number" id="t-fr" inputmode="decimal" placeholder="—" step="0.1">
+      </div>
+      <div class="row">
+        <span class="row-label">外気温</span>
+        <input type="number" id="t-out" inputmode="decimal" placeholder="—" step="0.1">
+      </div>
+    </div>
+
+    <div class="section-label">特記事項</div>
+    <div class="card">
+      <div class="row">
+        <textarea id="t-note" placeholder="異常・気になることなど…"></textarea>
+      </div>
+    </div>
+
+    <button class="submit-btn" onclick="submitTemp(event)">✅ 送信する</button>
+  </div>
+
+  <!-- ===== 分析用 ===== -->
+  <div class="panel" id="panel-analysis">
+
+    <div class="section-label">日付</div>
+    <div class="card">
+      <div class="row">
+        <span class="row-label">日付</span>
+        <input type="date" id="an-date">
+      </div>
+    </div>
+
+    <div class="section-label">コンテナ1</div>
+    <div class="card">
+      <div class="row">
+        <span class="row-label">温度<span class="row-unit">℃</span></span>
+        <input type="number" id="an-t1" inputmode="decimal" placeholder="—" step="0.1" oninput="calcAvg()">
+      </div>
+      <div class="row">
+        <span class="row-label">湿度<span class="row-unit">%</span></span>
+        <input type="number" id="an-h1" inputmode="decimal" placeholder="—" step="0.1" oninput="calcAvg()">
+      </div>
+    </div>
+
+    <div class="section-label">コンテナ2</div>
+    <div class="card">
+      <div class="row">
+        <span class="row-label">温度<span class="row-unit">℃</span></span>
+        <input type="number" id="an-t2" inputmode="decimal" placeholder="—" step="0.1" oninput="calcAvg()">
+      </div>
+      <div class="row">
+        <span class="row-label">湿度<span class="row-unit">%</span></span>
+        <input type="number" id="an-h2" inputmode="decimal" placeholder="—" step="0.1" oninput="calcAvg()">
+      </div>
+    </div>
+
+    <div class="section-label">コンテナ3</div>
+    <div class="card">
+      <div class="row">
+        <span class="row-label">温度<span class="row-unit">℃</span></span>
+        <input type="number" id="an-t3" inputmode="decimal" placeholder="—" step="0.1" oninput="calcAvg()">
+      </div>
+      <div class="row">
+        <span class="row-label">湿度<span class="row-unit">%</span></span>
+        <input type="number" id="an-h3" inputmode="decimal" placeholder="—" step="0.1" oninput="calcAvg()">
+      </div>
+      <div class="avg-row" id="an-avg"><p>平均値がここに表示されます</p></div>
+    </div>
+
+    <button class="submit-btn" onclick="submitAnalysis(event)">✅ 送信する</button>
+  </div>
+
+  <!-- ===== パック重量 ===== -->
+  <div class="panel" id="panel-pack">
+
+    <div class="section-label">後日重量入力</div>
+    <div class="card">
+      <div class="row">
+        <span class="row-label">出荷日</span>
+        <input type="date" id="pk-date">
+      </div>
+      <div class="row">
+        <span class="row-label">重量<span class="row-unit">g</span></span>
+        <input type="number" id="pk-w" inputmode="numeric" placeholder="例 8500">
+      </div>
+    </div>
+
+    <div class="section-label">メモ</div>
+    <div class="card">
+      <div class="row">
+        <textarea id="pk-memo" placeholder=""></textarea>
+      </div>
+    </div>
+
+    <button class="submit-btn" onclick="submitPack(event)">✅ 送信する</button>
+  </div>
+
+  <!-- ===== 加工 ===== -->
+  <div class="panel" id="panel-process">
+
+    <div class="section-label">加工日</div>
+    <div class="card">
+      <div class="row">
+        <span class="row-label">日付</span>
+        <input type="date" id="pr-date">
+      </div>
+    </div>
+
+    <div class="section-label">スライスしいたけ（乾燥）</div>
+    <div class="card">
+      <div class="row">
+        <span class="row-label">乾燥前<span class="row-unit">g</span></span>
+        <input type="number" id="pr-sl-b" inputmode="numeric" placeholder="0" oninput="calcYield('pr-sl-b','pr-sl-a','pr-sl-y')">
+      </div>
+      <div class="row">
+        <span class="row-label">乾燥後<span class="row-unit">g</span></span>
+        <input type="number" id="pr-sl-a" inputmode="numeric" placeholder="0" oninput="calcYield('pr-sl-b','pr-sl-a','pr-sl-y')">
+      </div>
+      <div class="yield-row" id="pr-sl-y"><span></span></div>
+    </div>
+
+    <div class="section-label">小粒しいたけ（乾燥）</div>
+    <div class="card">
+      <div class="row">
+        <span class="row-label">乾燥前<span class="row-unit">g</span></span>
+        <input type="number" id="pr-sm-b" inputmode="numeric" placeholder="0" oninput="calcYield('pr-sm-b','pr-sm-a','pr-sm-y')">
+      </div>
+      <div class="row">
+        <span class="row-label">乾燥後<span class="row-unit">g</span></span>
+        <input type="number" id="pr-sm-a" inputmode="numeric" placeholder="0" oninput="calcYield('pr-sm-b','pr-sm-a','pr-sm-y')">
+      </div>
+      <div class="yield-row" id="pr-sm-y"><span></span></div>
+    </div>
+
+    <div class="section-label">軸（パウダー原料）</div>
+    <div class="card">
+      <div class="row">
+        <span class="row-label">乾燥前<span class="row-unit">g</span></span>
+        <input type="number" id="pr-st-b" inputmode="numeric" placeholder="0" oninput="calcYield('pr-st-b','pr-st-a','pr-st-y')">
+      </div>
+      <div class="row">
+        <span class="row-label">乾燥後<span class="row-unit">g</span></span>
+        <input type="number" id="pr-st-a" inputmode="numeric" placeholder="0" oninput="calcYield('pr-st-b','pr-st-a','pr-st-y')">
+      </div>
+      <div class="yield-row" id="pr-st-y"><span></span></div>
+    </div>
+
+    <div class="section-label">パウダー製造（不定期）</div>
+    <div class="card">
+      <div class="row">
+        <span class="row-label">粉砕前<span class="row-unit">g</span></span>
+        <input type="number" id="pr-pw-b" inputmode="numeric" placeholder="0">
+      </div>
+      <div class="row">
+        <span class="row-label">粉砕後<span class="row-unit">g</span></span>
+        <input type="number" id="pr-pw-a" inputmode="numeric" placeholder="0">
+      </div>
+      <div class="row">
+        <span class="row-label">袋詰め<span class="row-unit">袋</span></span>
+        <input type="number" id="pr-pw-bags" inputmode="numeric" placeholder="0">
+      </div>
+    </div>
+
+    <button class="submit-btn" onclick="submitProcess(event)">✅ 送信する</button>
+  </div>
+
+  <!-- ===== 出荷 ===== -->
+  <div class="panel" id="panel-ship">
+
+    <div class="section-label">出荷情報</div>
+    <div class="card">
+      <div class="row">
+        <span class="row-label">出荷日</span>
+        <input type="date" id="sh-date">
+      </div>
+      <div class="row">
+        <span class="row-label">製造日</span>
+        <input type="date" id="sh-mfg">
+      </div>
+      <div class="row">
+        <span class="row-label">ロット</span>
+        <input type="text" id="sh-lot" placeholder="例 2604-001">
+      </div>
+      <div class="row">
+        <span class="row-label">出荷先</span>
+        <select id="sh-dest" onchange="updateFee()">
+          <option value="">選択</option>
+          <optgroup label="━ 藤増ストアー">
+            <option value="藤増ストアー 知井宮店|20">知井宮店</option>
+          </optgroup>
+          <optgroup label="━ えびす市場">
+            <option value="えびす市場|15">えびす市場</option>
+          </optgroup>
+          <optgroup label="━ くるみ市">
+            <option value="くるみ市|17">くるみ市</option>
+          </optgroup>
+          <optgroup label="━ グッディー (20%)">
+            <option value="グッディー 医大通り店|20">医大通り店</option>
+            <option value="グッディー 北部店|20">北部店</option>
+            <option value="グッディー 木次店|20">木次店</option>
+            <option value="グッディー 平田店|20">平田店</option>
+            <option value="グッディー 大田店|20">大田店</option>
+          </optgroup>
+          <optgroup label="━ ラピタ (22%)">
+            <option value="ラピタ 本店|22">本店</option>
+            <option value="ラピタ 湖陵店|22">湖陵店</option>
+            <option value="ラピタ 浜山店|22">浜山店</option>
+            <option value="ラピタ みなみ店|22">みなみ店</option>
+            <option value="ラピタ 平田店|22">平田店</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="fee-row" id="sh-fee">
+        <span>手数料：</span><span id="sh-fee-val"></span>
+      </div>
+    </div>
+
+    <div class="section-label">出荷数量（個）</div>
+    <div class="card">
+      <div class="row">
+        <span class="row-label">しいたけパック</span>
+        <input type="number" id="sh-pack" inputmode="numeric" placeholder="0">
+      </div>
+      <div class="row">
+        <span class="row-label">乾燥スライス</span>
+        <input type="number" id="sh-dsl" inputmode="numeric" placeholder="0">
+      </div>
+      <div class="row">
+        <span class="row-label">乾燥小粒</span>
+        <input type="number" id="sh-dsm" inputmode="numeric" placeholder="0">
+      </div>
+      <div class="row">
+        <span class="row-label">パウダー</span>
+        <input type="number" id="sh-pow" inputmode="numeric" placeholder="0">
+      </div>
+    </div>
+
+    <button class="submit-btn" onclick="submitShipping(event)">✅ 送信する</button>
+  </div>
+
+  <!-- ===== 菌床 ===== -->
+  <div class="panel" id="panel-bed">
+
+    <div class="section-label">菌床搬入記録</div>
+    <div class="card">
+      <div class="row">
+        <span class="row-label">搬入日</span>
+        <input type="date" id="bed-date" onchange="calcDiscard()">
+      </div>
+      <div class="row">
+        <span class="row-label">グループ</span>
+        <select id="bed-group">
+          <option value="">選択</option>
+          <option>1-AB</option><option>1-CD</option><option>1-EF</option>
+          <option>2-AB</option><option>2-CD</option><option>2-EF</option>
+          <option>3-AB</option><option>3-CD</option><option>3-EF</option>
+        </select>
+      </div>
+      <div class="row">
+        <span class="row-label">品種</span>
+        <select id="bed-variety">
+          <option value="">選択</option>
+          <option value="905">北研905号（新）</option>
+          <option value="705">北研705号（旧）</option>
+        </select>
+      </div>
+      <div class="row">
+        <span class="row-label">廃棄予定日</span>
+        <!-- ★ 修正: readonlyを外して手動編集も可能に -->
+        <input type="date" id="bed-discard">
+      </div>
+    </div>
+
+    <div class="section-label">メモ</div>
+    <div class="card">
+      <div class="row">
+        <textarea id="bed-memo" placeholder=""></textarea>
+      </div>
+    </div>
+
+    <button class="submit-btn" onclick="submitBed(event)">✅ 送信する</button>
+  </div>
+
+</main>
+
+<!-- タブバー -->
+<nav id="tabbar">
+  <button class="tab-btn active" onclick="showPanel('schedule',this)">
+    <span class="t-icon-wrap"><span class="t-icon">📋</span></span>
+    <span class="t-label">予定</span>
+  </button>
+  <button class="tab-btn" onclick="showPanel('daily',this)">
+    <span class="t-icon-wrap"><span class="t-icon">📅</span></span>
+    <span class="t-label">毎日</span>
+  </button>
+  <button class="tab-btn" onclick="showPanel('temp',this)">
+    <span class="t-icon-wrap"><span class="t-icon">🌡️</span></span>
+    <span class="t-label">温度</span>
+  </button>
+  <button class="tab-btn" onclick="showPanel('analysis',this)">
+    <span class="t-icon-wrap"><span class="t-icon">📊</span></span>
+    <span class="t-label">分析</span>
+  </button>
+  <button class="tab-btn" onclick="showPanel('pack',this)">
+    <span class="t-icon-wrap"><span class="t-icon">🍄</span></span>
+    <span class="t-label">パック</span>
+  </button>
+  <button class="tab-btn" onclick="showPanel('process',this)">
+    <span class="t-icon-wrap"><span class="t-icon">🏭</span></span>
+    <span class="t-label">加工</span>
+  </button>
+  <button class="tab-btn" onclick="showPanel('ship',this)">
+    <span class="t-icon-wrap"><span class="t-icon">🚚</span></span>
+    <span class="t-label">出荷</span>
+  </button>
+  <button class="tab-btn" onclick="showPanel('bed',this)">
+    <span class="t-icon-wrap"><span class="t-icon">🌱</span></span>
+    <span class="t-label">菌床</span>
+  </button>
+</nav>
+
+<script>
+/* ===================================================
+   設定（GitHub Pages版）
+=================================================== */
+// GAS ウェブアプリのデプロイURL
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw5v5ICY7VapPvYBStvDZZ6Y2Yv0NVeu24hXYXY2uGjSOOk9Cj8zpD7tQQWrcyX9j1o/exec';
+
+// 共有トークン（GAS側と同じ値に設定すること）
+// イタズラ送信防止。本格的なセキュリティではないが、偶然URLを踏んだ人の送信を防ぐ
+const API_TOKEN = 'CHANGE_THIS_TOKEN_TO_RANDOM_STRING';
+
+/* ===================================================
+   GAS API 呼び出し（text/plain で CORS preflight 回避）
+=================================================== */
+async function callAPI(action, payload) {
+  const body = JSON.stringify(Object.assign({ action, token: API_TOKEN }, payload || {}));
+  const res = await fetch(SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: body,
+    redirect: 'follow',
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const text = await res.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    throw new Error('レスポンス解析エラー: ' + text.slice(0, 100));
+  }
+  if (data && data.error) throw new Error(data.error);
+  return data;
+}
+
+/* ===================================================
+   初期化
+=================================================== */
+// ローカル日付(YYYY-MM-DD)を返す（タイムゾーン安全）
+function localDateStr(d) {
+  d = d || new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+
+// 現在時刻(HH:mm)を返す
+function localTimeStr(d) {
+  d = d || new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+// すべての日付フィールドを今日に更新・ナビバーの日付も更新
+function refreshToToday() {
+  const today = localDateStr();
+  const now   = localTimeStr();
+  ['d-date','t-date','an-date','pk-date','pr-date','sh-date','sh-mfg','bed-date']
+    .forEach(id => { const el=document.getElementById(id); if(el) el.value=today; });
+  const tt = document.getElementById('t-time');
+  if (tt) tt.value = now;
+
+  const nb = document.getElementById('navbar-sub');
+  if (nb) {
+    const d = new Date();
+    nb.textContent = `${d.getMonth()+1}/${d.getDate()}（${'日月火水木金土'[d.getDay()]}）`;
+  }
+}
+
+// 現在表示中の日付（ナビバーに反映されている日付）
+let _lastShownDate = '';
+
+window.onload = () => {
+  refreshToToday();
+  _lastShownDate = localDateStr();
+
+  // 記録者をlocalStorageから復元
+  const savedRec = localStorage.getItem('recorder');
+  if (savedRec) {
+    const sel = document.getElementById('recorder-select');
+    if (sel) sel.value = savedRec;
+  }
+
+  // 1分ごとに日付をチェック。日付が変わったら自動更新し予定も再読込
+  setInterval(() => {
+    const today = localDateStr();
+    if (today !== _lastShownDate) {
+      _lastShownDate = today;
+      refreshToToday();
+      if (document.body.classList.contains('schedule-mode')) {
+        loadSchedule();
+      }
+    }
+  }, 60 * 1000);
+};
+
+// アプリが背面から復帰した時（スマホでよくある）に日付を再チェック
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    const today = localDateStr();
+    if (today !== _lastShownDate) {
+      _lastShownDate = today;
+      refreshToToday();
+      if (document.body.classList.contains('schedule-mode')) {
+        loadSchedule();
+      }
+    }
+  }
+});
+
+/* ===================================================
+   記録者 localStorage 保存
+=================================================== */
+function saveRecorder() {
+  const val = document.getElementById('recorder-select').value;
+  if (val) {
+    localStorage.setItem('recorder', val);
+  } else {
+    localStorage.removeItem('recorder');
+  }
+}
+
+/* 記録者未選択チェック */
+function checkRecorder() {
+  const val = document.getElementById('recorder-select').value;
+  if (!val) {
+    toast('❌ 記録者を選択してください', 'error');
+    // 記録者バーをハイライト
+    const bar = document.getElementById('recorder-bar');
+    bar.style.background = '#ffcdd2';
+    setTimeout(() => { bar.style.background = '#e8f5e9'; }, 1500);
+    // ページ上部へスクロール
+    window.scrollTo({top:0, behavior:'smooth'});
+    return false;
+  }
+  return true;
+}
+
+/* ===================================================
+   タブ切り替え
+=================================================== */
+function showPanel(name, btn){
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  btn.classList.add('active');
+  // 予定タブの時は記録者バーを隠す
+  document.body.classList.toggle('schedule-mode', name === 'schedule');
+  window.scrollTo({top:0, behavior:'instant'});
+}
+
+/* ===================================================
+   朝/夕トグル
+=================================================== */
+let tod = 'morning';
+function setTod(v){
+  tod = v;
+  document.getElementById('seg-m').classList.toggle('active', v==='morning');
+  document.getElementById('seg-e').classList.toggle('active', v==='evening');
+}
+
+/* ===================================================
+   天候
+=================================================== */
+let weather = [];
+function toggleW(btn, val){
+  btn.classList.toggle('on');
+  weather = weather.includes(val) ? weather.filter(v=>v!==val) : [...weather, val];
+}
+
+/* ===================================================
+   kg 自動計算
+=================================================== */
+function calcKg(inId, badgeId, gPerUnit){
+  const v = parseFloat(document.getElementById(inId).value);
+  const el = document.getElementById(badgeId);
+  if(v > 0){
+    el.textContent = `→ ${(v*gPerUnit/1000).toFixed(2)} kg`;
+    el.classList.add('show');
+  } else {
+    el.classList.remove('show');
+  }
+}
+
+/* ===================================================
+   分析用 平均計算
+=================================================== */
+function calcAvg(){
+  const ts = [1,2,3].map(i=>parseFloat(document.getElementById('an-t'+i).value)).filter(v=>!isNaN(v));
+  const hs = [1,2,3].map(i=>parseFloat(document.getElementById('an-h'+i).value)).filter(v=>!isNaN(v));
+  const el = document.getElementById('an-avg');
+  const parts = [];
+  if(ts.length) parts.push(`平均温度 ${(ts.reduce((a,b)=>a+b,0)/ts.length).toFixed(1)} ℃`);
+  if(hs.length) parts.push(`平均湿度 ${(hs.reduce((a,b)=>a+b,0)/hs.length).toFixed(1)} %`);
+  el.querySelector('p').textContent = parts.length ? parts.join('　') : '平均値がここに表示されます';
+}
+
+/* ===================================================
+   乾燥歩留まり
+=================================================== */
+function calcYield(bId, aId, yId){
+  const b = parseFloat(document.getElementById(bId).value);
+  const a = parseFloat(document.getElementById(aId).value);
+  const el = document.getElementById(yId);
+  if(b>0 && a>0){
+    el.querySelector('span').textContent = `歩留まり ${(a/b*100).toFixed(1)}%（${b}g → ${a}g）`;
+    el.classList.add('show');
+  } else {
+    el.classList.remove('show');
+  }
+}
+
+/* ===================================================
+   廃棄予定日（★ 修正: 搬入日の7ヶ月後に最も近い木曜日を自動設定）
+=================================================== */
+function calcDiscard(){
+  const d = document.getElementById('bed-date').value;
+  if(!d) return;
+
+  // 7ヶ月後の基準日を計算
+  const base = new Date(d + 'T00:00:00');
+  const target = new Date(base);
+  target.setMonth(target.getMonth() + 7);
+
+  // 最も近い木曜日を計算（木曜日 = 4）
+  // dow=0〜6 のとき、木曜日との差 diff を -3〜+3 の範囲に収める
+  const dow = target.getDay();
+  let diff = 4 - dow;          // 木曜日との日数差（生）
+  if (diff > 3)  diff -= 7;   // 4〜6日先なら前の木曜日の方が近い
+  if (diff < -3) diff += 7;   // 4〜6日前なら次の木曜日の方が近い
+  target.setDate(target.getDate() + diff);
+
+  document.getElementById('bed-discard').value = target.toISOString().slice(0, 10);
+}
+
+/* ===================================================
+   手数料バッジ
+=================================================== */
+function updateFee(){
+  const val = document.getElementById('sh-dest').value;
+  const row  = document.getElementById('sh-fee');
+  const span = document.getElementById('sh-fee-val');
+  if(val){
+    span.textContent = val.split('|')[1] + '%';
+    row.classList.add('show');
+  } else {
+    row.classList.remove('show');
+  }
+}
+
+/* ===================================================
+   送信結果表示（★ 修正: 大きなオーバーレイで目立つように）
+=================================================== */
+function toast(msg, type='success'){
+  if(type === 'success'){
+    // 成功 → 大きなオーバーレイを表示
+    showResult('✅', '送信完了！', 'タップして閉じる', 'success');
+  } else {
+    // エラー → 小さいトーストで表示
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'show';
+    setTimeout(()=>{ el.className=''; }, 3500);
+  }
+}
+
+function showResult(icon, title, sub, type){
+  const overlay = document.getElementById('result-overlay');
+  document.getElementById('result-icon').textContent  = icon;
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-sub').textContent   = sub;
+  overlay.className = 'show ' + type;
+  // 3秒後に自動で閉じる
+  clearTimeout(overlay._timer);
+  overlay._timer = setTimeout(hideResult, 3000);
+}
+
+function hideResult(){
+  const overlay = document.getElementById('result-overlay');
+  clearTimeout(overlay._timer);
+  overlay.className = '';
+}
+
+/* ===================================================
+   GAS 送信（fetch版 — submit アクション）
+=================================================== */
+function post(payload){
+  return callAPI('submit', payload);
+}
+
+/* ===================================================
+   重複チェック（送信前呼び出し）
+=================================================== */
+function checkDup(payload){
+  return callAPI('checkDuplicate', payload);
+}
+
+/* 重複確認ダイアログを表示し、ユーザー選択を待つ */
+let _dupResolver = null;
+function showDupDialog(duplicates) {
+  return new Promise(resolve => {
+    _dupResolver = resolve;
+    const list = document.getElementById('dup-list');
+    list.innerHTML = '';
+    duplicates.forEach(d => {
+      const row = document.createElement('div');
+      row.className = 'dup-item';
+      row.innerHTML =
+        '<span class="dup-time">🕐 ' + d.time + '</span>' +
+        '<span class="dup-rec">👤 ' + d.recorder + '</span>';
+      list.appendChild(row);
+    });
+    const msg = duplicates.length === 1
+      ? 'この日付には既に記録があります。追加で送信しますか？'
+      : 'この日付には既に ' + duplicates.length + ' 件の記録があります。追加で送信しますか？';
+    document.getElementById('dup-msg').textContent = msg;
+    document.getElementById('dup-overlay').classList.add('show');
+  });
+}
+function confirmDupSubmit() {
+  document.getElementById('dup-overlay').classList.remove('show');
+  if (_dupResolver) { _dupResolver(true); _dupResolver = null; }
+}
+function cancelDupSubmit() {
+  document.getElementById('dup-overlay').classList.remove('show');
+  if (_dupResolver) { _dupResolver(false); _dupResolver = null; }
+}
+
+/* 送信前ラッパー: 重複チェック → ダイアログ表示 → 送信 */
+async function postWithCheck(payload) {
+  // パック重量更新は「該当日を探して上書き」なので重複チェック不要
+  if (payload.formType === 'updatePack') {
+    return post(payload);
+  }
+  try {
+    const res = await checkDup({ formType: payload.formType, date: payload.date });
+    if (res && res.duplicates && res.duplicates.length > 0) {
+      const ok = await showDupDialog(res.duplicates);
+      if (!ok) {
+        const err = new Error('キャンセルされました');
+        err.isCancel = true;
+        throw err;
+      }
+    }
+  } catch (e) {
+    if (e.isCancel) throw e;
+    // checkDuplicate失敗時は送信続行（警告のみ）
+    console.warn('重複チェック失敗:', e);
+  }
+  return post(payload);
+}
+
+function startBtn(btn){ btn.disabled=true; btn.textContent='送信中…'; }
+function resetBtn(btn){ btn.disabled=false; btn.innerHTML='✅ 送信する'; }
+
+/* ===================================================
+   各送信関数
+=================================================== */
+async function submitDaily(e){
+  if (!checkRecorder()) return;
+  const btn=e.target; startBtn(btn);
+  try{
+    await postWithCheck({
+      formType:   'daily',
+      date:       v('d-date'),
+      packCont:   v('d-pack')||'0',
+      aBags:      v('d-a')||'0',
+      bBags:      v('d-b')||'0',
+      bBaraCont:  v('d-bb')||'0',
+      inA:        v('d-ia')||'0',
+      inB:        v('d-ib')||'0',
+      inC:        v('d-ic')||'0',
+      soakGroups:  [...soakGroups].join(','),   // パック浸水グループ（例: "1-ADE,2-BCF"）
+      soakExclude: [...soakExclude].join(','), // 除外列（例: "2-B,3-E"）
+      flipGroups:  [...flipGroups].join(','),  // 正転グループ
+      memo:       v('d-memo'),
+      recorder:   v('recorder-select'),
+    });
+    toast('✅ 送信完了！');
+    clear('d-pack','d-a','d-b','d-bb','d-ia','d-ib','d-ic','d-memo');
+    ['d-a-b','d-b-b','d-bb-b'].forEach(id=>document.getElementById(id).classList.remove('show'));
+    clearGrpBtns();
+  }catch(err){ if(!err.isCancel) toast('❌ エラー: '+err.message,'error'); }
+  resetBtn(btn);
+}
+
+async function submitTemp(e){
+  if (!checkRecorder()) return;
+  const btn=e.target; startBtn(btn);
+  try{
+    await postWithCheck({
+      formType:'temperature',
+      date:    v('t-date'), time:v('t-time'), timeOfDay:tod,
+      weather: weather.join('・'),
+      c1:v('t-c1'), c2:v('t-c2'), c3:v('t-c3'),
+      fridge:v('t-fr'), outside:v('t-out'), note:v('t-note'),
+      recorder: v('recorder-select'),
+    });
+    toast('✅ 送信完了！');
+    clear('t-c1','t-c2','t-c3','t-fr','t-out','t-note');
+    document.querySelectorAll('.w-btn').forEach(b=>b.classList.remove('on'));
+    weather=[];
+  }catch(err){ if(!err.isCancel) toast('❌ エラー: '+err.message,'error'); }
+  resetBtn(btn);
+}
+
+async function submitAnalysis(e){
+  if (!checkRecorder()) return;
+  const btn=e.target; startBtn(btn);
+  const ts=[1,2,3].map(i=>parseFloat(v('an-t'+i))||0);
+  const hs=[1,2,3].map(i=>parseFloat(v('an-h'+i))||0);
+  const vts=ts.filter(x=>x>0), vhs=hs.filter(x=>x>0);
+  try{
+    await postWithCheck({
+      formType:'analysisTemp',
+      date:v('an-date'),
+      t1:ts[0],t2:ts[1],t3:ts[2],
+      h1:hs[0],h2:hs[1],h3:hs[2],
+      avgTemp:vts.length?(vts.reduce((a,b)=>a+b,0)/vts.length).toFixed(1):'',
+      avgHum: vhs.length?(vhs.reduce((a,b)=>a+b,0)/vhs.length).toFixed(1):'',
+      recorder: v('recorder-select'),
+    });
+    toast('✅ 送信完了！');
+    clear('an-t1','an-t2','an-t3','an-h1','an-h2','an-h3');
+    document.getElementById('an-avg').querySelector('p').textContent='平均値がここに表示されます';
+  }catch(err){ if(!err.isCancel) toast('❌ エラー: '+err.message,'error'); }
+  resetBtn(btn);
+}
+
+async function submitPack(e){
+  if (!checkRecorder()) return;
+  const btn=e.target; startBtn(btn);
+  try{
+    await postWithCheck({ formType:'updatePack', date:v('pk-date'), packWeight:v('pk-w'), memo:v('pk-memo'), recorder:v('recorder-select') });
+    toast('✅ 送信完了！');
+    clear('pk-w','pk-memo');
+  }catch(err){ if(!err.isCancel) toast('❌ エラー: '+err.message,'error'); }
+  resetBtn(btn);
+}
+
+async function submitProcess(e){
+  if (!checkRecorder()) return;
+  const btn=e.target; startBtn(btn);
+  try{
+    await postWithCheck({
+      formType:'processing',
+      date:v('pr-date'),
+      sliceBefore:v('pr-sl-b')||'0', sliceAfter:v('pr-sl-a')||'0',
+      smallBefore:v('pr-sm-b')||'0', smallAfter:v('pr-sm-a')||'0',
+      stemBefore: v('pr-st-b')||'0', stemAfter: v('pr-st-a')||'0',
+      powderBefore:v('pr-pw-b')||'0', powderAfter:v('pr-pw-a')||'0',
+      powderBags:v('pr-pw-bags')||'0',
+      recorder: v('recorder-select'),
+    });
+    toast('✅ 送信完了！');
+    clear('pr-sl-b','pr-sl-a','pr-sm-b','pr-sm-a','pr-st-b','pr-st-a','pr-pw-b','pr-pw-a','pr-pw-bags');
+    ['pr-sl-y','pr-sm-y','pr-st-y'].forEach(id=>document.getElementById(id).classList.remove('show'));
+  }catch(err){ if(!err.isCancel) toast('❌ エラー: '+err.message,'error'); }
+  resetBtn(btn);
+}
+
+async function submitShipping(e){
+  if (!checkRecorder()) return;
+  const btn=e.target; startBtn(btn);
+  const dv=v('sh-dest');
+  try{
+    await postWithCheck({
+      formType:'shipping',
+      date:v('sh-date'), mfgDate:v('sh-mfg'),
+      dest: dv?dv.split('|')[0]:'', feeRate:dv?dv.split('|')[1]:'',
+      lot:v('sh-lot'),
+      packQty:v('sh-pack')||'0', drySl:v('sh-dsl')||'0',
+      drySm:v('sh-dsm')||'0', powder:v('sh-pow')||'0',
+      recorder: v('recorder-select'),
+    });
+    toast('✅ 送信完了！');
+    clear('sh-lot','sh-pack','sh-dsl','sh-dsm','sh-pow');
+    document.getElementById('sh-dest').value='';
+    document.getElementById('sh-fee').classList.remove('show');
+  }catch(err){ if(!err.isCancel) toast('❌ エラー: '+err.message,'error'); }
+  resetBtn(btn);
+}
+
+async function submitBed(e){
+  if (!checkRecorder()) return;
+  const btn=e.target; startBtn(btn);
+  try{
+    await postWithCheck({
+      formType:'bedHistory',
+      date:v('bed-date'), group:v('bed-group'),
+      variety:v('bed-variety'), discard:v('bed-discard'), memo:v('bed-memo'),
+      recorder: v('recorder-select'),
+    });
+    toast('✅ 送信完了！');
+    clear('bed-memo');
+    document.getElementById('bed-group').value='';
+    document.getElementById('bed-variety').value='';
+    document.getElementById('bed-discard').value='';
+  }catch(err){ if(!err.isCancel) toast('❌ エラー: '+err.message,'error'); }
+  resetBtn(btn);
+}
+
+/* ===================================================
+   作業グループ選択（パック浸水・正転）
+=================================================== */
+const soakGroups = new Set();
+const flipGroups = new Set();
+const soakExclude = new Set();   // 除外列（個別列）
+
+function toggleGrp(btn, type, group) {
+  const set = type === 'soak' ? soakGroups : flipGroups;
+  if (set.has(group)) {
+    set.delete(group);
+    btn.classList.remove('on');
+  } else {
+    set.add(group);
+    btn.classList.add('on');
+  }
+}
+
+/* 除外列アコーディオン */
+function toggleExclPanel() {
+  const btn   = document.getElementById('excl-toggle-btn');
+  const panel = document.getElementById('excl-panel');
+  btn.classList.toggle('open');
+  panel.classList.toggle('open');
+}
+
+/* 個別列の除外トグル */
+function toggleExcl(btn, key) {
+  if (soakExclude.has(key)) {
+    soakExclude.delete(key);
+    btn.classList.remove('on');
+  } else {
+    soakExclude.add(key);
+    btn.classList.add('on');
+  }
+}
+
+function clearGrpBtns() {
+  soakGroups.clear();
+  flipGroups.clear();
+  soakExclude.clear();
+  document.querySelectorAll('.grp-btn').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.col-btn').forEach(b => b.classList.remove('on'));
+  // アコーディオンを閉じる
+  document.getElementById('excl-toggle-btn').classList.remove('open');
+  document.getElementById('excl-panel').classList.remove('open');
+}
+
+/* ===================================================
+   ヘルパー
+=================================================== */
+const v = id => document.getElementById(id).value;
+function clear(...ids){ ids.forEach(id=>{ document.getElementById(id).value=''; }); }
+
+/* ===================================================
+   予定タブ — 作業予定の読み込み・描画
+=================================================== */
+function loadSchedule() {
+  // 予定データと記録チェックを並列取得
+  const p1 = callAPI('getTodaySchedule');
+  const p2 = callAPI('checkTodayRecords').catch(() => null);  // チェック失敗しても予定は表示
+  Promise.all([p1, p2])
+    .then(([schedule, recStatus]) => renderSchedule(schedule, recStatus))
+    .catch(err => {
+      document.getElementById('sch-loading').innerHTML =
+        '<div style="font-size:36px;color:#c62828;">読み込みエラー</div>' +
+        '<div style="font-size:26px;color:#8e8e93;margin-top:12px;">' + err.message + '</div>';
+    });
+}
+
+/* 列リスト({container,col}[]) をコンテナごとにまとめたバッジHTMLに変換
+   例: [{c:1,col:'A'},{c:1,col:'D'},{c:2,col:'A'}] → "1-AD" と "2-A" の2バッジ */
+function groupByContainer(items, cssClass) {
+  if (!items || items.length === 0) return '';
+  const byContainer = {};
+  items.forEach(it => {
+    const c = it.container;
+    if (!byContainer[c]) byContainer[c] = [];
+    if (!byContainer[c].includes(it.col)) byContainer[c].push(it.col);
+  });
+  const containers = Object.keys(byContainer).sort((a,b)=>a-b);
+  let html = '';
+  containers.forEach(c => {
+    const cols = byContainer[c].sort().join('');
+    html += '<span class="sch-badge ' + cssClass + '">' + c + '-' + cols + '</span>';
+  });
+  return html;
+}
+
+function renderSchedule(s, recStatus) {
+  const el = document.getElementById('sch-content');
+  const loading = document.getElementById('sch-loading');
+  loading.style.display = 'none';
+  el.style.display = 'block';
+
+  // 休日
+  if (s.isOff) {
+    el.innerHTML =
+      '<div class="sch-off">' +
+        '<span class="off-icon">🏠</span>' +
+        '<span class="off-text">' + s.date.slice(5) + '（' + s.dayOfWeek + '）<br>休日です</span>' +
+      '</div>';
+    return;
+  }
+
+  let html = '';
+
+  // --- 日付ヘッダー ---
+  const md = s.date.slice(5).replace('-', '/');
+  html += '<div class="schedule-date">' + md + '（' + s.dayOfWeek + '）';
+  if (s.isHoliday) html += '<span class="sch-sub">祝日</span>';
+  if (s.mondayIsHoliday && !s.isHoliday) html += '<span class="sch-sub">※ 今週月曜は祝日のため曜日シフト</span>';
+  html += '</div>';
+
+  // --- ⚠️ 記録忘れアラート（未記録あれば最上部に表示）---
+  if (recStatus && !recStatus.skip && recStatus.issues && recStatus.issues.length > 0) {
+    html += '<div class="sch-card rec-alert">';
+    html += '<div class="sch-header" style="color:#b71c1c;"><span class="sch-icon">⚠️</span>未記録あり（' + recStatus.issues.length + '件）</div>';
+    html += '<div class="sch-body">';
+    recStatus.issues.forEach(iss => {
+      html += '<div class="rec-alert-item">';
+      html += '<span class="rec-alert-label">❗ ' + iss.label + '</span>';
+      html += '<span class="rec-alert-detail">' + iss.detail + '</span>';
+      html += '</div>';
+    });
+    html += '</div></div>';
+  } else if (recStatus && !recStatus.skip) {
+    // 全て記録済み
+    html += '<div class="sch-card" style="background:#e8f5e9;border:3px solid #43a047;">';
+    html += '<div class="sch-header" style="color:#1b5e20;"><span class="sch-icon">✅</span>記録 全て完了</div>';
+    html += '</div>';
+  }
+
+  // --- 1. 収穫 ---（毎日作業あり → 常に today-active）
+  html += '<div class="sch-card today-active">';
+  html += '<div class="sch-header"><span class="sch-icon">🍄</span>収穫</div>';
+  html += '<div class="sch-body">';
+
+  // 浸水日の全獲り
+  if (s.soakDay && s.zenDoriColumns && s.zenDoriColumns.length > 0) {
+    html += '<div style="margin-bottom:10px;font-size:30px;font-weight:700;color:#c62828;">全獲り（浸水対象列）</div>';
+    html += '<div style="margin-bottom:12px;">';
+    html += groupByContainer(s.zenDoriColumns, 'harvest-zen');
+    html += '</div>';
+  }
+  if (s.soakDay && s.chuDoriColumns && s.chuDoriColumns.length > 0) {
+    html += '<div style="margin-bottom:10px;font-size:30px;font-weight:700;color:#1565c0;">中獲り（廃棄週の列）</div>';
+    html += '<div style="margin-bottom:12px;">';
+    html += groupByContainer(s.chuDoriColumns, 'harvest-chu');
+    html += '</div>';
+  }
+
+  // 通常の収穫グループ
+  if (s.harvestType === '小獲り') {
+    html += '<div style="margin-bottom:10px;font-size:30px;font-weight:700;color:#7b1fa2;">小獲り</div>';
+  } else if (!s.soakDay) {
+    html += '<div style="margin-bottom:10px;font-size:30px;font-weight:700;color:#1565c0;">' + s.harvestType + '</div>';
+  } else {
+    html += '<div style="margin-bottom:10px;font-size:30px;font-weight:700;color:#1565c0;">中獲り（収穫グループ）</div>';
+  }
+  html += '<div>';
+  const harvestCls = s.harvestType === '小獲り' ? 'harvest-ko' : 'harvest-chu';
+  html += groupByContainer(s.harvestInfo || [], harvestCls);
+  // 廃棄週で追加された列があれば注記
+  const addedHarvest = (s.harvestInfo || []).filter(h => h.addedReason);
+  if (addedHarvest.length > 0) {
+    html += '<div style="margin-top:8px;font-size:24px;color:#8e8e93;">（うち ' +
+      [...new Set(addedHarvest.map(h => h.container + '-' + h.col))].join(', ') +
+      ' は廃棄週のため追加）</div>';
+  }
+  html += '</div>';
+  html += '</div></div>';
+
+  // --- 2. パック浸水 ---
+  html += '<div class="sch-card' + (s.soakDay ? ' today-active' : '') + '">';
+  html += '<div class="sch-header"><span class="sch-icon">💧</span>パック浸水</div>';
+  html += '<div class="sch-body">';
+  if (s.soakDay) {
+    html += '<div style="font-size:32px;font-weight:700;color:#01579b;margin-bottom:10px;">';
+    html += '今日は浸水日！　対象: ' + s.soakGroupName + '</div>';
+    // 対象列をコンテナごとにまとめる
+    const soakList = [];
+    for (let c = 1; c <= 3; c++) {
+      s.soakColumns.forEach(col => soakList.push({ container: c, col }));
+    }
+    html += '<div>' + groupByContainer(soakList, 'soak') + '</div>';
+  } else {
+    html += '<div class="sch-next">次回浸水: <strong>' + s.soakDayOfWeek + '曜日 — ' + s.nextSoakGroupName + 'グループ</strong></div>';
+  }
+  // 特殊イベント（袋外し）
+  if (s.specialEvents && s.specialEvents.length > 0) {
+    s.specialEvents.forEach(ev => {
+      html += '<div class="sch-alert">⚠️ ' + ev.container + '-' + ev.col +
+        '（' + ev.group + '）: パック浸水+' + ev.type + '（' + ev.reason + '）</div>';
+    });
+  }
+  html += '</div></div>';
+
+  // --- 3. 正転 ---
+  html += '<div class="sch-card' + (s.flipDay ? ' today-active' : '') + '">';
+  html += '<div class="sch-header"><span class="sch-icon">🔄</span>正転</div>';
+  html += '<div class="sch-body">';
+  if (s.flipDay && s.flipDetails && s.flipDetails.length > 0) {
+    html += '<div style="font-size:32px;font-weight:700;color:#e65100;margin-bottom:14px;">今日は正転日！</div>';
+    // 正転の種類ごとにグループ化（種類が異なる列は別表示）
+    const byType = {};
+    s.flipDetails.forEach(f => {
+      if (!byType[f.type]) byType[f.type] = [];
+      byType[f.type].push({ container: f.container, col: f.col });
+    });
+    Object.keys(byType).forEach(tp => {
+      let cls = 'flip';
+      if (tp.indexOf('給水なし') >= 0 || tp.indexOf('パック外し') >= 0) cls = 'flip-water';
+      html += '<div style="margin-bottom:14px;">';
+      html += '<div style="font-size:28px;font-weight:700;color:#6d4c41;margin-bottom:6px;">' + tp + '</div>';
+      html += '<div>' + groupByContainer(byType[tp], cls) + '</div>';
+      html += '</div>';
+    });
+  } else if (s.flipDay) {
+    html += '<div style="font-size:30px;color:#8e8e93;">正転対象なし</div>';
+  } else {
+    html += '<div class="sch-next">次回正転: <strong>' + s.flipDayOfWeek + '曜日</strong></div>';
+  }
+  html += '</div></div>';
+
+  // --- 4. 加圧散水（毎週金曜午後・予定は常時表示） ---
+  {
+    const isFri = s.pressureSprayDay;
+    html += '<div class="sch-card' + (isFri ? ' today-active' : '') + '">';
+    html += '<div class="sch-header"><span class="sch-icon">🚿</span>加圧散水' + (isFri ? '（午後）' : '（今週金曜予定）') + '</div>';
+    html += '<div class="sch-body">';
+    if (s.pressureSpray && s.pressureSpray.length > 0) {
+      html += '<div>' + groupByContainer(s.pressureSpray, 'spray') + '</div>';
+      html += '<div style="font-size:22px;color:#8e8e93;margin-top:10px;">※ 収穫列＋搬入1ヶ月以内の菌床（袋外し・パック外し済みは除く）</div>';
+    } else {
+      html += '<div style="font-size:30px;color:#8e8e93;">対象なし</div>';
+    }
+    html += '</div></div>';
+  }
+
+  // --- 5. 菌床搬入・廃棄 ---
+  if ((s.bedArrivals && s.bedArrivals.length > 0) || (s.bedDisposals && s.bedDisposals.length > 0)) {
+    // 今日が搬入日または廃棄日なら today-active
+    const todayIsBedDay = (
+      (s.bedArrivals  || []).some(b => b.date === s.date) ||
+      (s.bedDisposals || []).some(b => b.date === s.date)
+    );
+    html += '<div class="sch-card' + (todayIsBedDay ? ' today-active' : '') + '">';
+    html += '<div class="sch-header"><span class="sch-icon">🌱</span>菌床搬入・廃棄</div>';
+    html += '<div class="sch-body">';
+    if (s.bedDisposals && s.bedDisposals.length > 0) {
+      s.bedDisposals.forEach(b => {
+        html += '<div style="margin-bottom:8px;"><span class="sch-badge bed-out">廃棄 ' + b.group + '</span>';
+        html += '<span style="font-size:26px;color:#8e8e93;margin-left:8px;">' + b.date.slice(5) + '</span></div>';
+      });
+    }
+    if (s.bedArrivals && s.bedArrivals.length > 0) {
+      s.bedArrivals.forEach(b => {
+        html += '<div style="margin-bottom:8px;"><span class="sch-badge bed-in">搬入 ' + b.group + '</span>';
+        html += '<span style="font-size:26px;color:#8e8e93;margin-left:8px;">' + b.date.slice(5) + '</span></div>';
+      });
+    }
+    html += '</div></div>';
+  }
+
+  // --- 6. 温度記録リマインド（毎日朝夕） ---
+  html += '<div class="sch-card today-active">';
+  html += '<div class="sch-header"><span class="sch-icon">🌡️</span>温度記録</div>';
+  html += '<div class="sch-body">';
+  html += '<div style="font-size:30px;color:#6e6e73;">朝・夕の温度記録を忘れずに</div>';
+  html += '</div></div>';
+
+  // --- 7. 菌床サマリー ---
+  if (s.bedSummary && s.bedSummary.length > 0) {
+    html += '<div class="sch-card">';
+    html += '<div class="sch-header"><span class="sch-icon">📊</span>菌床一覧</div>';
+    html += '<div class="sch-body">';
+    html += '<div class="bed-summary-grid">';
+    s.bedSummary.forEach(b => {
+      if (b.status === '未登録') {
+        html += '<div class="bed-summary-row">';
+        html += '<span class="bs-group">' + b.group + '</span>';
+        html += '<span style="color:#bbb;">未登録</span>';
+        html += '</div>';
+        return;
+      }
+      // 色を経過月数で変える
+      let monthColor = '#1565c0';
+      if (b.monthsSinceArrival >= 6) monthColor = '#c62828';
+      else if (b.monthsSinceArrival >= 4) monthColor = '#e65100';
+      else if (b.monthsSinceArrival >= 2) monthColor = '#2e7d32';
+
+      html += '<div class="bed-summary-row">';
+      html += '<span class="bs-group">' + b.group + '</span>';
+      html += '<span class="bs-months" style="color:' + monthColor + ';">' + b.monthsSinceArrival + 'ヶ月</span>';
+      if (b.daysToDiscard !== null && b.daysToDiscard <= 30) {
+        html += '<span style="font-size:24px;font-weight:700;color:#c62828;margin-left:8px;">あと' + b.daysToDiscard + '日</span>';
+      }
+      html += '<span class="bs-discard">廃棄: ' + (b.discardDate ? b.discardDate.slice(5) : '—') + '</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+    html += '</div></div>';
+  }
+
+  el.innerHTML = html;
+}
+
+// 予定タブ初期読み込み
+setTimeout(loadSchedule, 300);
+</script>
+</body>
+</html>
