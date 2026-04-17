@@ -1047,6 +1047,90 @@
     .dup-btn-cancel:active { background: #e0e0e0; }
 
     /* ============================================================
+       手書き商品追加（出荷タブ）
+    ============================================================ */
+    .add-item-btn {
+      display: block;
+      width: calc(100% - 40px);
+      margin: 20px auto;
+      height: 90px;
+      border: 3px dashed #2e7d32;
+      background: #f1f8e9;
+      color: #1b5e20;
+      font-size: 32px;
+      font-weight: 700;
+      border-radius: 22px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .add-item-btn:active { background: #dcedc8; }
+    .custom-item {
+      padding: 20px 24px;
+      border-bottom: 1px solid #e5e5ea;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px 10px;
+      align-items: center;
+    }
+    .custom-item:last-child { border-bottom: none; }
+    .custom-item .ci-name-row {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .custom-item .ci-name-row input {
+      flex: 1;
+      font-size: 32px;
+      border: 2px solid #bdbdbd;
+      border-radius: 12px;
+      padding: 12px 16px;
+      outline: none;
+    }
+    .custom-item .ci-name-row input:focus { border-color: #2e7d32; }
+    .custom-item .ci-remove {
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      border: none;
+      background: #ef5350;
+      color: #fff;
+      font-size: 32px;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      flex-shrink: 0;
+    }
+    .custom-item .ci-remove:active { background: #c62828; }
+    .custom-item .ci-num-row {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 10px;
+    }
+    .custom-item .ci-num-row .ci-field {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .custom-item .ci-num-row .ci-field label {
+      font-size: 26px;
+      font-weight: 600;
+      color: #6e6e73;
+      flex-shrink: 0;
+    }
+    .custom-item .ci-num-row .ci-field input {
+      flex: 1;
+      font-size: 30px;
+      border: 2px solid #bdbdbd;
+      border-radius: 12px;
+      padding: 10px 14px;
+      outline: none;
+      text-align: right;
+      min-width: 0;
+    }
+    .custom-item .ci-num-row .ci-field input:focus { border-color: #2e7d32; }
+
+    /* ============================================================
        📱 モバイル用オーバーライド（viewport幅 ≤ 768px）
        元のデザインはタブレット/PC向けの大きな値を使っているため、
        スマホでは全体的に小さめに調整する
@@ -1198,6 +1282,14 @@
       .sch-body div[style*="font-size:28px"],
       .sch-body div[style*="font-size:30px"],
       .sch-body div[style*="font-size:32px"] { font-size: 15px !important; }
+
+      /* 手書き商品追加 */
+      .add-item-btn { height: 52px; font-size: 17px; border-width: 2px; margin: 12px auto; }
+      .custom-item { padding: 12px 14px; gap: 8px 8px; }
+      .custom-item .ci-name-row input { font-size: 17px; padding: 8px 10px; border-radius: 8px; border-width: 1px; }
+      .custom-item .ci-remove { width: 36px; height: 36px; font-size: 18px; }
+      .custom-item .ci-num-row .ci-field label { font-size: 14px; }
+      .custom-item .ci-num-row .ci-field input { font-size: 17px; padding: 7px 9px; border-radius: 8px; border-width: 1px; }
     }
   </style>
 </head>
@@ -1689,6 +1781,14 @@
         <span class="row-label">パウダー</span>
         <input type="number" id="sh-pow" inputmode="numeric" placeholder="0">
       </div>
+    </div>
+
+    <div class="section-label">その他の商品（手書き追加）</div>
+    <div class="card">
+      <div id="sh-custom-list"></div>
+      <button type="button" class="add-item-btn" onclick="addCustomItem()">
+        ＋ 商品を追加
+      </button>
     </div>
 
     <button class="submit-btn" onclick="submitShipping(event)">✅ 送信する</button>
@@ -2238,6 +2338,22 @@ async function submitShipping(e){
   if (!checkRecorder()) return;
   const btn=e.target; startBtn(btn);
   const dv=v('sh-dest');
+
+  // 手書き商品を収集（名前が入っているものだけ）
+  const customItems = [];
+  document.querySelectorAll('#sh-custom-list .custom-item').forEach(item => {
+    const name  = item.querySelector('.ci-name').value.trim();
+    const qty   = item.querySelector('.ci-qty').value;
+    const price = item.querySelector('.ci-price').value;
+    if (name) {
+      customItems.push({
+        name,
+        qty: qty ? Number(qty) : 0,
+        price: price ? Number(price) : 0,
+      });
+    }
+  });
+
   try{
     await postWithCheck({
       formType:'shipping',
@@ -2246,14 +2362,49 @@ async function submitShipping(e){
       lot:v('sh-lot'),
       packQty:v('sh-pack')||'0', drySl:v('sh-dsl')||'0',
       drySm:v('sh-dsm')||'0', powder:v('sh-pow')||'0',
+      customItems: customItems,
       recorder: v('recorder-select'),
     });
     toast('✅ 送信完了！');
     clear('sh-lot','sh-pack','sh-dsl','sh-dsm','sh-pow');
     document.getElementById('sh-dest').value='';
     document.getElementById('sh-fee').classList.remove('show');
+    // 手書き商品もリセット
+    document.getElementById('sh-custom-list').innerHTML = '';
   }catch(err){ if(!err.isCancel) toast('❌ エラー: '+err.message,'error'); }
   resetBtn(btn);
+}
+
+/* ===================================================
+   手書き商品の追加・削除
+=================================================== */
+function addCustomItem() {
+  const list = document.getElementById('sh-custom-list');
+  const row = document.createElement('div');
+  row.className = 'custom-item';
+  row.innerHTML =
+    '<div class="ci-name-row">' +
+      '<input type="text" class="ci-name" placeholder="商品名（例: しいたけ詰合せ）">' +
+      '<button type="button" class="ci-remove" onclick="removeCustomItem(this)">×</button>' +
+    '</div>' +
+    '<div class="ci-num-row">' +
+      '<div class="ci-field">' +
+        '<label>個数</label>' +
+        '<input type="number" class="ci-qty" inputmode="numeric" placeholder="0">' +
+      '</div>' +
+      '<div class="ci-field">' +
+        '<label>単価(円)</label>' +
+        '<input type="number" class="ci-price" inputmode="numeric" placeholder="0">' +
+      '</div>' +
+    '</div>';
+  list.appendChild(row);
+  // 追加した入力欄にフォーカス
+  row.querySelector('.ci-name').focus();
+}
+
+function removeCustomItem(btn) {
+  const row = btn.closest('.custom-item');
+  if (row) row.remove();
 }
 
 async function submitBed(e){
