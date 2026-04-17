@@ -695,39 +695,33 @@
       color: var(--green-dark);
       position: relative;
     }
-    .schedule-date .sch-date-wrap {
-      position: relative;
+    /* 日付ボタン（タップで日付ピッカーが開く） */
+    .schedule-date label.sch-date-wrap {
       display: inline-block;
       padding: 10px 24px;
       border-radius: 20px;
       background: #e8f5e9;
       border: 3px solid #81c784;
-      -webkit-tap-highlight-color: transparent;
       cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      color: var(--green-dark);
     }
-    .schedule-date .sch-date-wrap:active { background: #c8e6c9; }
-    .schedule-date .sch-date-wrap::after {
+    .schedule-date label.sch-date-wrap:active { background: #c8e6c9; }
+    .schedule-date label.sch-date-wrap::after {
       content: ' 📅';
       font-size: 0.6em;
       vertical-align: middle;
       opacity: 0.7;
     }
-    /* 日付入力はボタン全体に重ねて、タップで直接カレンダーが開くように */
-    .schedule-date .sch-date-wrap input[type="date"] {
+    /* label内の日付入力は画面外に置いてタップを受け付けないが、labelクリックで開く */
+    .schedule-date label.sch-date-wrap input[type="date"] {
       position: absolute;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
+      left: -9999px;
+      width: 1px;
+      height: 1px;
       opacity: 0;
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      -webkit-appearance: none;
-      appearance: none;
-      font-size: inherit;
-      color: transparent;
-      padding: 0;
-      margin: 0;
+      pointer-events: none;
     }
     .schedule-date .sch-sub {
       display: block;
@@ -1272,7 +1266,7 @@
       /* ---- 予定タブ ---- */
       .schedule-date { font-size: 24px; padding: 14px 14px 4px; }
       .schedule-date .sch-sub { font-size: 14px; margin-top: 2px; }
-      .schedule-date .sch-date-wrap { padding: 6px 14px; border-radius: 12px; border-width: 2px; }
+      .schedule-date label.sch-date-wrap { padding: 6px 14px; border-radius: 12px; border-width: 2px; }
       .schedule-date .sch-today-btn { font-size: 14px; padding: 5px 14px; margin-top: 6px; border-radius: 18px; }
       .sch-card { border-radius: 14px; margin: 10px 10px; }
       .sch-header { font-size: 18px !important; padding: 14px 14px 8px; gap: 8px; }
@@ -2624,11 +2618,11 @@ function renderSchedule(s, recStatus) {
   const todayStr = localDateStr();
   const isToday = (s.date === todayStr);
   html += '<div class="schedule-date">';
-  // 日付ボタン: テキスト + 重ねた透明な date input
-  html += '<span class="sch-date-wrap">';
+  // labelでinputを包むと、iOSでもAndroidでもlabelタップで確実に日付ピッカーが開く
+  html += '<label class="sch-date-wrap">';
   html +=   md + '（' + s.dayOfWeek + '）';
   html +=   '<input type="date" id="sch-date-picker" value="' + s.date + '" onchange="onScheduleDateChange(this.value)">';
-  html += '</span>';
+  html += '</label>';
   if (s.isHoliday) html += '<span class="sch-sub">祝日</span>';
   if (s.mondayIsHoliday && !s.isHoliday) html += '<span class="sch-sub">※ 今週月曜は祝日のため曜日シフト</span>';
   if (!isToday) {
