@@ -1260,33 +1260,34 @@
     ============================================================ */
     @media (max-width: 768px) {
       :root {
-        --navbar-h: 60px;
-        --recorder-h: 56px;
-        --tabbar-h: 92px;
+        --navbar-h: 46px;
+        --recorder-h: 44px;
+        --tabbar-h: 70px;
       }
 
-      /* ナビゲーションバー */
-      #navbar-inner { height: 60px !important; padding: 0 14px !important; gap: 8px; }
-      #navbar-icon  { font-size: 28px !important; }
-      #navbar-title { font-size: 20px !important; }
-      #navbar-sub   { font-size: 14px !important; }
+      /* ナビゲーションバー（コンパクト化） */
+      #navbar-inner { height: 46px !important; padding: 0 12px !important; gap: 6px; }
+      #navbar-icon  { font-size: 22px !important; }
+      #navbar-title { font-size: 17px !important; }
+      #navbar-sub   { font-size: 13px !important; }
 
-      /* 記録者バー */
-      #recorder-bar { padding: 0 12px !important; gap: 8px; }
-      #recorder-bar .rec-icon  { font-size: 22px; }
-      #recorder-bar .rec-label { font-size: 16px !important; }
-      #recorder-bar select     { height: 38px; font-size: 16px; border-radius: 10px; padding: 0 10px; border-width: 1px; }
+      /* 記録者バー（コンパクト化） */
+      #recorder-bar { height: 44px; padding: 0 10px !important; gap: 8px; }
+      #recorder-bar .rec-icon  { font-size: 18px; }
+      #recorder-bar .rec-label { font-size: 14px !important; }
+      #recorder-bar select     { height: 32px; font-size: 14px; border-radius: 10px; padding: 0 10px; border-width: 1px; }
 
-      /* タブバー */
+      /* タブバー（コンパクト化 + アイコンを下寄せ） */
       #tabbar {
-        height: calc(92px + env(safe-area-inset-bottom, 0px));
-        padding-top: 6px;
-        padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+        height: calc(70px + env(safe-area-inset-bottom, 0px));
+        padding-top: 4px;
+        padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
+        align-items: flex-end !important;
       }
-      .t-icon-wrap { width: 48px !important; height: 36px !important; border-radius: 18px !important; }
-      .tab-btn .t-icon  { font-size: 34px !important; }
-      .tab-btn .t-label { font-size: 12px !important; }
-      .tab-btn { gap: 3px !important; }
+      .t-icon-wrap { width: 42px !important; height: 32px !important; border-radius: 16px !important; }
+      .tab-btn .t-icon  { font-size: 28px !important; }
+      .tab-btn .t-label { font-size: 11px !important; }
+      .tab-btn { gap: 2px !important; justify-content: flex-end !important; padding-bottom: 2px !important; }
 
       /* コンテンツ全体 */
       #content { padding-bottom: 100px; }
@@ -2711,11 +2712,27 @@ function renderSchedule(s, recStatus) {
 
   // 休日
   if (s.isOff) {
-    el.innerHTML =
+    const md = s.date.slice(5).replace('-', '/');
+    const todayStr = localDateStr();
+    const isToday = (s.date === todayStr);
+    let offHtml = '<div class="schedule-date">';
+    // 日付ボタン（休日でも表示して他日へ移動できるように）
+    offHtml += '<span class="sch-date-wrap">';
+    offHtml +=   '<span class="sch-date-display">' + md + '（' + s.dayOfWeek + '）</span>';
+    offHtml +=   '<input type="date" class="sch-date-input" id="sch-date-picker" value="' + s.date + '" onchange="onScheduleDateChange(this.value)">';
+    offHtml += '</span>';
+    if (!isToday) {
+      offHtml += '<br><button type="button" class="sch-today-btn" onclick="onScheduleDateChange(\'' + todayStr + '\')">今日に戻る</button>';
+    }
+    offHtml += '</div>';
+    // 休日表示本体
+    offHtml +=
       '<div class="sch-off">' +
         '<span class="off-icon">🏠</span>' +
-        '<span class="off-text">' + s.date.slice(5) + '（' + s.dayOfWeek + '）<br>休日です</span>' +
+        '<span class="off-text">休日</span>' +
+        '<div style="margin-top:14px;font-size:26px;color:#8e8e93;">別の日を確認する場合は上の日付をタップ</div>' +
       '</div>';
+    el.innerHTML = offHtml;
     return;
   }
 
@@ -2922,30 +2939,4 @@ function renderSchedule(s, recStatus) {
         html += '</div>';
         return;
       }
-      // 色を経過月数で変える
-      let monthColor = '#1565c0';
-      if (b.monthsSinceArrival >= 6) monthColor = '#c62828';
-      else if (b.monthsSinceArrival >= 4) monthColor = '#e65100';
-      else if (b.monthsSinceArrival >= 2) monthColor = '#2e7d32';
-
-      html += '<div class="bed-summary-row">';
-      html += '<span class="bs-group">' + b.group + '</span>';
-      html += '<span class="bs-months" style="color:' + monthColor + ';">' + b.monthsSinceArrival + 'ヶ月</span>';
-      if (b.daysToDiscard !== null && b.daysToDiscard <= 30) {
-        html += '<span style="font-size:24px;font-weight:700;color:#c62828;margin-left:8px;">あと' + b.daysToDiscard + '日</span>';
-      }
-      html += '<span class="bs-discard">廃棄: ' + (b.discardDate ? b.discardDate.slice(5) : '—') + '</span>';
-      html += '</div>';
-    });
-    html += '</div>';
-    html += '</div></div>';
-  }
-
-  el.innerHTML = html;
-}
-
-// 予定タブ初期読み込み
-setTimeout(loadSchedule, 300);
-</script>
-</body>
-</html>
+   
