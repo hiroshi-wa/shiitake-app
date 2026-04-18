@@ -2939,4 +2939,30 @@ function renderSchedule(s, recStatus) {
         html += '</div>';
         return;
       }
-   
+      // 色を経過月数で変える
+      let monthColor = '#1565c0';
+      if (b.monthsSinceArrival >= 6) monthColor = '#c62828';
+      else if (b.monthsSinceArrival >= 4) monthColor = '#e65100';
+      else if (b.monthsSinceArrival >= 2) monthColor = '#2e7d32';
+
+      html += '<div class="bed-summary-row">';
+      html += '<span class="bs-group">' + b.group + '</span>';
+      html += '<span class="bs-months" style="color:' + monthColor + ';">' + b.monthsSinceArrival + 'ヶ月</span>';
+      if (b.daysToDiscard !== null && b.daysToDiscard <= 30) {
+        html += '<span style="font-size:24px;font-weight:700;color:#c62828;margin-left:8px;">あと' + b.daysToDiscard + '日</span>';
+      }
+      html += '<span class="bs-discard">廃棄: ' + (b.discardDate ? b.discardDate.slice(5) : '—') + '</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+    html += '</div></div>';
+  }
+
+  el.innerHTML = html;
+}
+
+// 予定タブ初期読み込み
+setTimeout(loadSchedule, 300);
+</script>
+</body>
+</html>
