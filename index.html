@@ -2038,7 +2038,18 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw5v5ICY7VapPvYBStvD
 
 // 共有トークン（GAS側と同じ値に設定すること）
 // イタズラ送信防止。本格的なセキュリティではないが、偶然URLを踏んだ人の送信を防ぐ
-const API_TOKEN = 'shiitake-tsuwabuki-2026-x8p3q7m2k9';
+const API_TOKEN = 'shiitake-wa-2026-K9mN3pQ7xR2vT5wL8sJ4fH6cB';
+
+/* ===================================================
+   HTMLエスケープ（XSS対策）
+   innerHTMLに値を埋め込む際は必ずこれを通すこと
+=================================================== */
+function esc(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, m => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[m]));
+}
 
 /* ===================================================
    GAS API 呼び出し（text/plain で CORS preflight 回避）
@@ -2340,8 +2351,8 @@ function showDupDialog(duplicates) {
       const row = document.createElement('div');
       row.className = 'dup-item';
       row.innerHTML =
-        '<span class="dup-time">🕐 ' + d.time + '</span>' +
-        '<span class="dup-rec">👤 ' + d.recorder + '</span>';
+        '<span class="dup-time">🕐 ' + esc(d.time) + '</span>' +
+        '<span class="dup-rec">👤 ' + esc(d.recorder) + '</span>';
       list.appendChild(row);
     });
     const msg = duplicates.length === 1
@@ -2675,7 +2686,7 @@ function loadSchedule(dateStr) {
     .catch(err => {
       loading.innerHTML =
         '<div style="font-size:36px;color:#c62828;">読み込みエラー</div>' +
-        '<div style="font-size:26px;color:#8e8e93;margin-top:12px;">' + err.message + '</div>';
+        '<div style="font-size:26px;color:#8e8e93;margin-top:12px;">' + esc(err.message) + '</div>';
     });
 }
 
@@ -2699,7 +2710,7 @@ function groupByContainer(items, cssClass) {
   let html = '';
   containers.forEach(c => {
     const cols = byContainer[c].sort().join('');
-    html += '<span class="sch-badge ' + cssClass + '">' + c + '-' + cols + '</span>';
+    html += '<span class="sch-badge ' + cssClass + '">' + esc(c) + '-' + esc(cols) + '</span>';
   });
   return html;
 }
@@ -2718,11 +2729,11 @@ function renderSchedule(s, recStatus) {
     let offHtml = '<div class="schedule-date">';
     // 日付ボタン（休日でも表示して他日へ移動できるように）
     offHtml += '<span class="sch-date-wrap">';
-    offHtml +=   '<span class="sch-date-display">' + md + '（' + s.dayOfWeek + '）</span>';
-    offHtml +=   '<input type="date" class="sch-date-input" id="sch-date-picker" value="' + s.date + '" onchange="onScheduleDateChange(this.value)">';
+    offHtml +=   '<span class="sch-date-display">' + esc(md) + '（' + esc(s.dayOfWeek) + '）</span>';
+    offHtml +=   '<input type="date" class="sch-date-input" id="sch-date-picker" value="' + esc(s.date) + '" onchange="onScheduleDateChange(this.value)">';
     offHtml += '</span>';
     if (!isToday) {
-      offHtml += '<br><button type="button" class="sch-today-btn" onclick="onScheduleDateChange(\'' + todayStr + '\')">今日に戻る</button>';
+      offHtml += '<br><button type="button" class="sch-today-btn" onclick="onScheduleDateChange(\'' + esc(todayStr) + '\')">今日に戻る</button>';
     }
     offHtml += '</div>';
     // 休日表示本体
@@ -2745,25 +2756,25 @@ function renderSchedule(s, recStatus) {
   html += '<div class="schedule-date">';
   // 透明な日付inputをボタンの上に重ねて、iOSでも直接タップでピッカーが開く方式
   html += '<span class="sch-date-wrap">';
-  html +=   '<span class="sch-date-display">' + md + '（' + s.dayOfWeek + '）</span>';
-  html +=   '<input type="date" class="sch-date-input" id="sch-date-picker" value="' + s.date + '" onchange="onScheduleDateChange(this.value)">';
+  html +=   '<span class="sch-date-display">' + esc(md) + '（' + esc(s.dayOfWeek) + '）</span>';
+  html +=   '<input type="date" class="sch-date-input" id="sch-date-picker" value="' + esc(s.date) + '" onchange="onScheduleDateChange(this.value)">';
   html += '</span>';
   if (s.isHoliday) html += '<span class="sch-sub">祝日</span>';
   if (s.mondayIsHoliday && !s.isHoliday) html += '<span class="sch-sub">※ 今週月曜は祝日のため曜日シフト</span>';
   if (!isToday) {
-    html += '<br><button type="button" class="sch-today-btn" onclick="onScheduleDateChange(\'' + todayStr + '\')">今日に戻る</button>';
+    html += '<br><button type="button" class="sch-today-btn" onclick="onScheduleDateChange(\'' + esc(todayStr) + '\')">今日に戻る</button>';
   }
   html += '</div>';
 
   // --- ⚠️ 記録忘れアラート（未記録あれば最上部に表示）---
   if (recStatus && !recStatus.skip && recStatus.issues && recStatus.issues.length > 0) {
     html += '<div class="sch-card rec-alert">';
-    html += '<div class="sch-header" style="color:#b71c1c;"><span class="sch-icon">⚠️</span>未記録あり（' + recStatus.issues.length + '件）</div>';
+    html += '<div class="sch-header" style="color:#b71c1c;"><span class="sch-icon">⚠️</span>未記録あり（' + esc(recStatus.issues.length) + '件）</div>';
     html += '<div class="sch-body">';
     recStatus.issues.forEach(iss => {
       html += '<div class="rec-alert-item">';
-      html += '<span class="rec-alert-label">❗ ' + iss.label + '</span>';
-      html += '<span class="rec-alert-detail">' + iss.detail + '</span>';
+      html += '<span class="rec-alert-label">❗ ' + esc(iss.label) + '</span>';
+      html += '<span class="rec-alert-detail">' + esc(iss.detail) + '</span>';
       html += '</div>';
     });
     html += '</div></div>';
@@ -2797,7 +2808,7 @@ function renderSchedule(s, recStatus) {
   if (s.harvestType === '小獲り') {
     html += '<div style="margin-bottom:10px;font-size:30px;font-weight:700;color:#7b1fa2;">小獲り</div>';
   } else if (!s.soakDay) {
-    html += '<div style="margin-bottom:10px;font-size:30px;font-weight:700;color:#1565c0;">' + s.harvestType + '</div>';
+    html += '<div style="margin-bottom:10px;font-size:30px;font-weight:700;color:#1565c0;">' + esc(s.harvestType) + '</div>';
   } else {
     html += '<div style="margin-bottom:10px;font-size:30px;font-weight:700;color:#1565c0;">中獲り（収穫グループ）</div>';
   }
@@ -2808,7 +2819,7 @@ function renderSchedule(s, recStatus) {
   const addedHarvest = (s.harvestInfo || []).filter(h => h.addedReason);
   if (addedHarvest.length > 0) {
     html += '<div style="margin-top:8px;font-size:24px;color:#8e8e93;">（うち ' +
-      [...new Set(addedHarvest.map(h => h.container + '-' + h.col))].join(', ') +
+      esc([...new Set(addedHarvest.map(h => h.container + '-' + h.col))].join(', ')) +
       ' は廃棄週のため追加）</div>';
   }
   html += '</div>';
@@ -2820,7 +2831,7 @@ function renderSchedule(s, recStatus) {
   html += '<div class="sch-body">';
   if (s.soakDay) {
     html += '<div style="font-size:32px;font-weight:700;color:#01579b;margin-bottom:10px;">';
-    html += '今日は浸水日！　対象: ' + s.soakGroupName + '</div>';
+    html += '今日は浸水日！　対象: ' + esc(s.soakGroupName) + '</div>';
     // 対象列をコンテナごとにまとめる
     const soakList = [];
     for (let c = 1; c <= 3; c++) {
@@ -2828,13 +2839,13 @@ function renderSchedule(s, recStatus) {
     }
     html += '<div>' + groupByContainer(soakList, 'soak') + '</div>';
   } else {
-    html += '<div class="sch-next">次回浸水: <strong>' + s.soakDayOfWeek + '曜日 — ' + s.nextSoakGroupName + 'グループ</strong></div>';
+    html += '<div class="sch-next">次回浸水: <strong>' + esc(s.soakDayOfWeek) + '曜日 — ' + esc(s.nextSoakGroupName) + 'グループ</strong></div>';
   }
   // 特殊イベント（袋外し）
   if (s.specialEvents && s.specialEvents.length > 0) {
     s.specialEvents.forEach(ev => {
-      html += '<div class="sch-alert">⚠️ ' + ev.container + '-' + ev.col +
-        '（' + ev.group + '）: パック浸水+' + ev.type + '（' + ev.reason + '）</div>';
+      html += '<div class="sch-alert">⚠️ ' + esc(ev.container) + '-' + esc(ev.col) +
+        '（' + esc(ev.group) + '）: パック浸水+' + esc(ev.type) + '（' + esc(ev.reason) + '）</div>';
     });
   }
   html += '</div></div>';
@@ -2855,7 +2866,7 @@ function renderSchedule(s, recStatus) {
     [1, 2, 3].forEach(c => {
       const items = (flipByContainer[c] || []).slice().sort((a,b) => a.col.localeCompare(b.col));
       html += '<div class="flip-container-box">';
-      html += '<div class="flip-container-title">第' + c + 'コンテナ</div>';
+      html += '<div class="flip-container-title">第' + esc(c) + 'コンテナ</div>';
       if (items.length === 0) {
         html += '<div class="flip-empty">対象なし</div>';
       } else {
@@ -2863,8 +2874,8 @@ function renderSchedule(s, recStatus) {
           let cls = 'flip';
           if (f.type.indexOf('給水なし') >= 0 || f.type.indexOf('パック外し') >= 0) cls = 'flip-water';
           html += '<div class="flip-row">';
-          html += '<span class="flip-col-label">' + f.col + '列</span>';
-          html += '<span class="sch-badge ' + cls + '">' + f.type + '</span>';
+          html += '<span class="flip-col-label">' + esc(f.col) + '列</span>';
+          html += '<span class="sch-badge ' + cls + '">' + esc(f.type) + '</span>';
           html += '</div>';
         });
       }
@@ -2874,7 +2885,7 @@ function renderSchedule(s, recStatus) {
   } else if (s.flipDay) {
     html += '<div style="font-size:30px;color:#8e8e93;">正転対象なし</div>';
   } else {
-    html += '<div class="sch-next">次回正転: <strong>' + s.flipDayOfWeek + '曜日</strong></div>';
+    html += '<div class="sch-next">次回正転: <strong>' + esc(s.flipDayOfWeek) + '曜日</strong></div>';
   }
   html += '</div></div>';
 
@@ -2905,14 +2916,14 @@ function renderSchedule(s, recStatus) {
     html += '<div class="sch-body">';
     if (s.bedDisposals && s.bedDisposals.length > 0) {
       s.bedDisposals.forEach(b => {
-        html += '<div style="margin-bottom:8px;"><span class="sch-badge bed-out">廃棄 ' + b.group + '</span>';
-        html += '<span style="font-size:26px;color:#8e8e93;margin-left:8px;">' + b.date.slice(5) + '</span></div>';
+        html += '<div style="margin-bottom:8px;"><span class="sch-badge bed-out">廃棄 ' + esc(b.group) + '</span>';
+        html += '<span style="font-size:26px;color:#8e8e93;margin-left:8px;">' + esc(b.date.slice(5)) + '</span></div>';
       });
     }
     if (s.bedArrivals && s.bedArrivals.length > 0) {
       s.bedArrivals.forEach(b => {
-        html += '<div style="margin-bottom:8px;"><span class="sch-badge bed-in">搬入 ' + b.group + '</span>';
-        html += '<span style="font-size:26px;color:#8e8e93;margin-left:8px;">' + b.date.slice(5) + '</span></div>';
+        html += '<div style="margin-bottom:8px;"><span class="sch-badge bed-in">搬入 ' + esc(b.group) + '</span>';
+        html += '<span style="font-size:26px;color:#8e8e93;margin-left:8px;">' + esc(b.date.slice(5)) + '</span></div>';
       });
     }
     html += '</div></div>';
@@ -2934,7 +2945,7 @@ function renderSchedule(s, recStatus) {
     s.bedSummary.forEach(b => {
       if (b.status === '未登録') {
         html += '<div class="bed-summary-row">';
-        html += '<span class="bs-group">' + b.group + '</span>';
+        html += '<span class="bs-group">' + esc(b.group) + '</span>';
         html += '<span style="color:#bbb;">未登録</span>';
         html += '</div>';
         return;
@@ -2946,12 +2957,12 @@ function renderSchedule(s, recStatus) {
       else if (b.monthsSinceArrival >= 2) monthColor = '#2e7d32';
 
       html += '<div class="bed-summary-row">';
-      html += '<span class="bs-group">' + b.group + '</span>';
-      html += '<span class="bs-months" style="color:' + monthColor + ';">' + b.monthsSinceArrival + 'ヶ月</span>';
+      html += '<span class="bs-group">' + esc(b.group) + '</span>';
+      html += '<span class="bs-months" style="color:' + monthColor + ';">' + esc(b.monthsSinceArrival) + 'ヶ月</span>';
       if (b.daysToDiscard !== null && b.daysToDiscard <= 30) {
-        html += '<span style="font-size:24px;font-weight:700;color:#c62828;margin-left:8px;">あと' + b.daysToDiscard + '日</span>';
+        html += '<span style="font-size:24px;font-weight:700;color:#c62828;margin-left:8px;">あと' + esc(b.daysToDiscard) + '日</span>';
       }
-      html += '<span class="bs-discard">廃棄: ' + (b.discardDate ? b.discardDate.slice(5) : '—') + '</span>';
+      html += '<span class="bs-discard">廃棄: ' + esc(b.discardDate ? b.discardDate.slice(5) : '—') + '</span>';
       html += '</div>';
     });
     html += '</div>';
