@@ -1452,6 +1452,8 @@
       .custom-item .ci-num-row .ci-field input { font-size: 17px; padding: 7px 9px; border-radius: 8px; border-width: 1px; }
     }
   </style>
+<!-- Chart.js CDN（売上グラフ用） -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body class="schedule-mode">
 
@@ -1972,6 +1974,16 @@
     <div class="section-label">📊 売上サマリ</div>
     <div class="card" id="rp-summary">
       <div style="text-align:center; color:#888; padding:20px;">読み込み中…</div>
+    </div>
+
+    <div class="section-label">📈 グラフ</div>
+    <div class="card" style="padding:12px;">
+      <div style="position:relative; height:240px; margin-bottom:14px;">
+        <canvas id="rp-chart-bars"></canvas>
+      </div>
+      <div style="position:relative; height:240px;">
+        <canvas id="rp-chart-pie"></canvas>
+      </div>
     </div>
 
     <div class="section-label">📦 現在の理論在庫</div>
@@ -2809,9 +2821,119 @@ function _getDestGroup(dest) {
   return 'その他';
 }
 
+// Chart.js インスタンス管理（再描画時の使い回し用）
+let _rpChartBars = null;
+let _rpChartPie = null;
+
+function _destroyCharts() {
+  if (_rpChartBars) { _rpChartBars.destroy(); _rpChartBars = null; }
+  if (_rpChartPie)  { _rpChartPie.destroy();  _rpChartPie = null; }
+}
+
+function renderCharts(res, mode) {
+  // Chart.js が未ロードなら何もしない
+  if (typeof Chart === 'undefined') return;
+  _destroyCharts();
+  const rows = (res && res.rows) || [];
+  const GROUP_COLOR = { 'グッディー':'#388e3c', 'ラピタ':'#1565c0', 'その他':'#6d4c41' };
+
+  if (rows.length === 0) return;
+
+  // --- 棒グラフ：月次は日別売上、日次は店舗別売上 ---
+  const elBars = document.getElementById('rp-chart-bars');
+  if (mode === 'month') {
+    // 日別売上を集計
+    const byDate = {};
+    rows.forEach(r => { byDate[r.date] = (byDate[r.date] || 0) + r.amount; });
+    const dates = Object.keys(byDate).sort();
+    _rpChartBars = new Chart(elBars, {
+      type: 'bar',
+      data: {
+        labels: dates.map(d => d.slice(5)),  // MM-DD
+        datasets: [{
+          label: '日別売上(円)',
+          data: dates.map(d => byDate[d]),
+          backgroundColor: '#66bb6a',
+          borderColor: '#2e7d32',
+          borderWidth: 1,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          title: { display: true, text: '日別売上（' + res.startDate.slice(0,7) + '）' },
+        },
+        scales: { y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString() + '円' } } },
+      },
+    });
+  } else {
+    // 日次：店舗別売上
+    const byDest = {};
+    rows.forEach(r => { byDest[r.dest] = (byDest[r.dest] || 0) + r.amount; });
+    const destList = Object.keys(byDest).sort((a,b) => byDest[b] - byDest[a]);
+    const colors = destList.map(d => GROUP_COLOR[_getDestGroup(d)]);
+    _rpChartBars = new Chart(elBars, {
+      type: 'bar',
+      data: {
+        labels: destList,
+        datasets: [{
+          label: '売上(円)',
+          data: destList.map(d => byDest[d]),
+          backgroundColor: colors,
+        }],
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          title: { display: true, text: '店舗別売上（' + res.startDate + '）' },
+        },
+        scales: { x: { beginAtZero: true, ticks: { callback: v => v.toLocaleString() + '円' } } },
+      },
+    });
+  }
+
+  // --- 円グラフ：商品別構成 ---
+  const elPie = document.getElementById('rp-chart-pie');
+  const byProd = {};
+  rows.forEach(r => { byProd[r.product] = (byProd[r.product] || 0) + r.amount; });
+  const prodList = Object.keys(byProd).sort((a,b) => byProd[b] - byProd[a]);
+  const prodColors = ['#2e7d32','#1565c0','#e65100','#6a1b9a','#c62828','#6d4c41','#546e7a','#558b2f','#4527a0','#00695c'];
+  _rpChartPie = new Chart(elPie, {
+    type: 'doughnut',
+    data: {
+      labels: prodList,
+      datasets: [{
+        data: prodList.map(p => byProd[p]),
+        backgroundColor: prodList.map((_, i) => prodColors[i % prodColors.length]),
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
+        title: { display: true, text: '商品別構成（売上金額）' },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const total = ctx.dataset.data.reduce((a,b) => a+b, 0);
+              const pct = total ? (ctx.parsed / total * 100).toFixed(1) : 0;
+              return ctx.label + ': ' + ctx.parsed.toLocaleString() + '円 (' + pct + '%)';
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
 function renderReport(res, mode) {
   const elSum = document.getElementById('rp-summary');
   const rows = (res && res.rows) || [];
+  // グラフも同時更新
+  renderCharts(res, mode);
   if (rows.length === 0) {
     elSum.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">'
       + esc(mode === 'month' ? '当月の売上データはまだありません' : 'この日の売上データはありません')
