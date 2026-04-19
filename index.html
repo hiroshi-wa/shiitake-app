@@ -2801,6 +2801,14 @@ async function loadReport() {
   }
 }
 
+// 出荷先名からグループ（「グッディー」「ラピタ」「その他」）を判定
+function _getDestGroup(dest) {
+  if (!dest) return 'その他';
+  if (dest.indexOf('グッディー') === 0) return 'グッディー';
+  if (dest.indexOf('ラピタ') === 0) return 'ラピタ';
+  return 'その他';
+}
+
 function renderReport(res, mode) {
   const elSum = document.getElementById('rp-summary');
   const rows = (res && res.rows) || [];
@@ -2810,44 +2818,77 @@ function renderReport(res, mode) {
       + '</div>';
     return;
   }
-  // 店舗別集計
-  const byDest = {};
-  let totalQty = 0, totalAmt = 0, totalNet = 0;
+
+  // グループ→店舗→明細 の3段階集計
+  const GROUPS = ['グッディー', 'ラピタ', 'その他'];
+  const GROUP_COLOR = { 'グッディー':'#388e3c', 'ラピタ':'#1565c0', 'その他':'#6d4c41' };
+  const GROUP_BG    = { 'グッディー':'#e8f5e9', 'ラピタ':'#e3f2fd', 'その他':'#efebe9' };
+  const grouped = { 'グッディー':{}, 'ラピタ':{}, 'その他':{} };
+  let grandQty = 0, grandAmt = 0, grandNet = 0;
+
   rows.forEach(r => {
-    const d = byDest[r.dest] = byDest[r.dest] || { qty: 0, amt: 0, net: 0, items: [] };
+    const g = _getDestGroup(r.dest);
+    const d = grouped[g][r.dest] = grouped[g][r.dest] || { qty:0, amt:0, net:0, items:[] };
     d.qty += r.qty; d.amt += r.amount; d.net += r.net;
     d.items.push(r);
-    totalQty += r.qty; totalAmt += r.amount; totalNet += r.net;
+    grandQty += r.qty; grandAmt += r.amount; grandNet += r.net;
   });
-  const destKeys = Object.keys(byDest).sort();
+
   const headTitle = mode === 'month'
     ? ('月次：' + esc(res.startDate) + '〜' + esc(res.endDate))
     : ('日次：' + esc(res.startDate));
   let html = '<div style="font-weight:700; color:#1b5e20; padding:4px 0 10px; font-size:15px;">' + headTitle + '</div>';
   html += '<table style="width:100%; border-collapse:collapse; font-size:14px;">';
-  html += '<tr style="background:#e8f5e9;"><th style="text-align:left; padding:6px;">店舗</th><th style="text-align:right; padding:6px;">個数</th><th style="text-align:right; padding:6px;">売上(円)</th><th style="text-align:right; padding:6px;">入金予定(円)</th></tr>';
-  destKeys.forEach(k => {
-    const d = byDest[k];
-    html += '<tr style="border-bottom:1px solid #eee;">';
-    html += '<td style="padding:6px;">' + esc(k) + '</td>';
-    html += '<td style="text-align:right; padding:6px;">' + d.qty + '</td>';
-    html += '<td style="text-align:right; padding:6px;">' + d.amt.toLocaleString() + '</td>';
-    html += '<td style="text-align:right; padding:6px;">' + d.net.toLocaleString() + '</td>';
+  html += '<tr style="background:#f5f5f5;"><th style="text-align:left; padding:6px;">店舗 / 商品</th><th style="text-align:right; padding:6px;">個数</th><th style="text-align:right; padding:6px;">売上(円)</th><th style="text-align:right; padding:6px;">入金予定(円)</th></tr>';
+
+  GROUPS.forEach(g => {
+    const stores = grouped[g];
+    const storeKeys = Object.keys(stores).sort();
+    if (storeKeys.length === 0) return;  // そのグループに売上なければスキップ
+
+    // グループ小計を先に計算
+    let gQty = 0, gAmt = 0, gNet = 0;
+    storeKeys.forEach(k => { gQty += stores[k].qty; gAmt += stores[k].amt; gNet += stores[k].net; });
+
+    // グループヘッダー
+    html += '<tr style="background:' + GROUP_BG[g] + '; border-top:2px solid ' + GROUP_COLOR[g] + ';">';
+    html += '<td colspan="4" style="padding:8px 6px; font-weight:700; color:' + GROUP_COLOR[g] + ';">▼ ' + esc(g) + 'グループ</td>';
     html += '</tr>';
-    d.items.forEach(it => {
-      html += '<tr style="background:#fafafa; color:#666; font-size:12px;">';
-      html += '<td style="padding:3px 6px 3px 22px;">└ ' + esc(it.product) + (it.source ? ' <span style="color:#999;">['+esc(it.source)+']</span>' : '') + '</td>';
-      html += '<td style="text-align:right; padding:3px 6px;">' + it.qty + '</td>';
-      html += '<td style="text-align:right; padding:3px 6px;">' + it.amount.toLocaleString() + '</td>';
-      html += '<td style="text-align:right; padding:3px 6px;">' + it.net.toLocaleString() + '</td>';
+
+    // 店舗行と明細
+    storeKeys.forEach(k => {
+      const d = stores[k];
+      html += '<tr style="border-bottom:1px solid #eee;">';
+      html += '<td style="padding:6px; padding-left:14px;">' + esc(k) + '</td>';
+      html += '<td style="text-align:right; padding:6px;">' + d.qty + '</td>';
+      html += '<td style="text-align:right; padding:6px;">' + d.amt.toLocaleString() + '</td>';
+      html += '<td style="text-align:right; padding:6px;">' + d.net.toLocaleString() + '</td>';
       html += '</tr>';
+      d.items.forEach(it => {
+        html += '<tr style="background:#fafafa; color:#666; font-size:12px;">';
+        html += '<td style="padding:3px 6px 3px 30px;">└ ' + esc(it.product) + (it.source ? ' <span style="color:#999;">['+esc(it.source)+']</span>' : '') + '</td>';
+        html += '<td style="text-align:right; padding:3px 6px;">' + it.qty + '</td>';
+        html += '<td style="text-align:right; padding:3px 6px;">' + it.amount.toLocaleString() + '</td>';
+        html += '<td style="text-align:right; padding:3px 6px;">' + it.net.toLocaleString() + '</td>';
+        html += '</tr>';
+      });
     });
+
+    // グループ小計
+    html += '<tr style="background:' + GROUP_BG[g] + '; font-weight:600;">';
+    html += '<td style="padding:6px; color:' + GROUP_COLOR[g] + ';">' + esc(g) + '小計</td>';
+    html += '<td style="text-align:right; padding:6px;">' + gQty + '</td>';
+    html += '<td style="text-align:right; padding:6px;">' + gAmt.toLocaleString() + '</td>';
+    html += '<td style="text-align:right; padding:6px;">' + gNet.toLocaleString() + '</td>';
+    html += '</tr>';
   });
-  html += '<tr style="background:#c8e6c9; font-weight:700;">';
-  html += '<td style="padding:8px;">合計</td>';
-  html += '<td style="text-align:right; padding:8px;">' + totalQty + '</td>';
-  html += '<td style="text-align:right; padding:8px;">' + totalAmt.toLocaleString() + '</td>';
-  html += '<td style="text-align:right; padding:8px;">' + totalNet.toLocaleString() + '</td>';
+
+  // 総合計
+  html += '<tr style="background:#c8e6c9; font-weight:700; font-size:15px; border-top:2px solid #2e7d32;">';
+  html += '<td style="padding:10px;">' + (mode === 'month' ? '月総計' : '日総計') + '</td>';
+  html += '<td style="text-align:right; padding:10px;">' + grandQty + '</td>';
+  html += '<td style="text-align:right; padding:10px;">' + grandAmt.toLocaleString() + '</td>';
+  html += '<td style="text-align:right; padding:10px;">' + grandNet.toLocaleString() + '</td>';
   html += '</tr>';
   html += '</table>';
   elSum.innerHTML = html;
