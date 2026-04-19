@@ -806,6 +806,176 @@
       color: #6d4c41;
     }
 
+    /* ============================================================
+       週次設定カード（祝日の平日モード設定用）
+    ============================================================ */
+    .sch-card.week-config {
+      background: #fff8e1 !important;
+      border: 4px solid #ffa000;
+      box-shadow: 0 4px 14px rgba(255,160,0,0.35);
+    }
+    .sch-card.week-config .sch-header {
+      color: #e65100 !important;
+      font-size: 36px !important;
+    }
+    .sch-card.week-config.done {
+      background: #f1f8e9 !important;
+      border-color: #8bc34a;
+      box-shadow: 0 2px 8px rgba(139,195,74,0.3);
+    }
+    .sch-card.week-config.done .sch-header {
+      color: #558b2f !important;
+    }
+    .wc-entry {
+      padding: 18px 20px;
+      margin: 12px 0;
+      background: #fff;
+      border-radius: 16px;
+      border-left: 8px solid #ffa000;
+    }
+    .wc-entry-header {
+      font-size: 30px;
+      font-weight: 700;
+      color: #3e2723;
+      margin-bottom: 14px;
+    }
+    .wc-entry-header .wc-name {
+      font-size: 24px;
+      color: #6d4c41;
+      margin-left: 10px;
+      font-weight: 500;
+    }
+    .wc-mode-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .wc-mode-btn {
+      flex: 1;
+      height: 80px;
+      border: 3px solid #e0e0e0;
+      background: #fafafa;
+      border-radius: 16px;
+      font-size: 28px;
+      font-weight: 700;
+      color: #616161;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.12s;
+    }
+    .wc-mode-btn.on[data-mode="通常"] {
+      background: #e3f2fd; border-color: #1976d2; color: #0d47a1;
+    }
+    .wc-mode-btn.on[data-mode="半日"] {
+      background: #fff3e0; border-color: #e65100; color: #bf360c;
+    }
+    .wc-mode-btn.on[data-mode="休み"] {
+      background: #eceff1; border-color: #546e7a; color: #263238;
+    }
+    .wc-half-options {
+      margin-top: 12px;
+      padding: 14px;
+      background: #fff3e0;
+      border-radius: 12px;
+      display: none;
+    }
+    .wc-half-options.show { display: block; }
+    .wc-toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+    }
+    .wc-toggle-label {
+      font-size: 28px;
+      font-weight: 700;
+      color: #3e2723;
+      flex: 1;
+    }
+    .wc-toggle-btns {
+      display: flex;
+      gap: 6px;
+    }
+    .wc-toggle-btn {
+      padding: 10px 20px;
+      height: 64px;
+      border: 2px solid #e0e0e0;
+      background: #fafafa;
+      border-radius: 14px;
+      font-size: 24px;
+      font-weight: 700;
+      color: #616161;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .wc-toggle-btn.on[data-val="yes"] {
+      background: #c8e6c9; border-color: #2e7d32; color: #1b5e20;
+    }
+    .wc-toggle-btn.on[data-val="no"] {
+      background: #ffcdd2; border-color: #c62828; color: #b71c1c;
+    }
+    .wc-save-btn {
+      width: calc(100% - 24px);
+      margin: 12px;
+      height: 90px;
+      background: #e65100;
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      font-size: 32px;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 3px 10px rgba(230,81,0,0.4);
+    }
+    .wc-save-btn:active { transform: scale(0.97); }
+    .wc-save-btn:disabled { background: #bdbdbd; box-shadow: none; }
+    .wc-done-summary {
+      padding: 14px 20px;
+      font-size: 26px;
+      color: #33691e;
+    }
+    .wc-done-summary .wc-meta {
+      font-size: 22px;
+      color: #8e8e93;
+      margin-top: 6px;
+    }
+    .wc-change-btn {
+      margin: 8px 16px 16px;
+      height: 68px;
+      width: calc(100% - 32px);
+      background: #f5f5f5;
+      color: #555;
+      border: 2px solid #bdbdbd;
+      border-radius: 14px;
+      font-size: 26px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    /* 半日モードバナー（予定画面トップ） */
+    .halfday-banner {
+      margin: 14px 12px 0;
+      padding: 20px 24px;
+      background: #fff3e0;
+      border: 4px solid #e65100;
+      border-radius: 22px;
+      text-align: center;
+      font-size: 34px;
+      font-weight: 700;
+      color: #bf360c;
+      box-shadow: 0 3px 10px rgba(230,81,0,0.3);
+    }
+    /* 「今日はやりません」表示 */
+    .sch-skip {
+      padding: 20px;
+      font-size: 30px;
+      font-weight: 700;
+      color: #8e8e93;
+      background: #f5f5f5;
+      border-radius: 14px;
+      text-align: center;
+    }
+
     /* 当日作業が必要なカードを強調 */
     .sch-card.today-active {
       background: #ffebee !important;
@@ -3302,10 +3472,21 @@ function clear(...ids){ ids.forEach(id=>{ document.getElementById(id).value=''; 
 // 現在表示中の日付（予定タブ）
 let _currentScheduleDate = null;  // null = 今日
 
+// 指定日付(YYYY-MM-DD)を含む週の月曜(YYYY-MM-DD)を返す
+function mondayOf(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const dow = d.getDay();
+  const diff = dow === 0 ? -6 : 1 - dow;
+  d.setDate(d.getDate() + diff);
+  return localDateStr(d);
+}
+
 function loadSchedule(dateStr) {
   _currentScheduleDate = dateStr || null;
   const todayStr = localDateStr();
   const isToday = !dateStr || dateStr === todayStr;
+  const targetDate = dateStr || todayStr;
+  const mondayStr = mondayOf(targetDate);
 
   // ローディング表示
   const loading = document.getElementById('sch-loading');
@@ -3322,14 +3503,174 @@ function loadSchedule(dateStr) {
   const p2 = isToday
     ? callAPI('checkTodayRecords').catch(() => null)
     : Promise.resolve(null);
+  // その週の祝日と設定を取得（失敗してもアプリは継続）
+  const p3 = callAPI('getHolidaysInWeek', { monday: mondayStr }).catch(() => ({ holidays: [] }));
+  const p4 = callAPI('getWeekConfig',     { monday: mondayStr }).catch(() => ({ entries: [] }));
 
-  Promise.all([p1, p2])
-    .then(([schedule, recStatus]) => renderSchedule(schedule, recStatus))
+  Promise.all([p1, p2, p3, p4])
+    .then(([schedule, recStatus, holidays, weekConfig]) => {
+      renderSchedule(schedule, recStatus, holidays, weekConfig, mondayStr);
+    })
     .catch(err => {
       loading.innerHTML =
         '<div style="font-size:36px;color:#c62828;">読み込みエラー</div>' +
         '<div style="font-size:26px;color:#8e8e93;margin-top:12px;">' + esc(err.message) + '</div>';
     });
+}
+
+/* ===================================================
+   週次設定カード — 描画・保存
+=================================================== */
+// 現在編集中の週次設定（DOM状態からではなく、JSオブジェクトを正とする）
+let _wcState = { mondayStr: '', entries: {} };
+
+function renderWeekConfigCard(holidays, weekConfig, mondayStr) {
+  const list = (holidays && holidays.holidays) || [];
+  if (list.length === 0) return '';  // 祝日なしなら表示しない
+
+  // 既存設定を日付でマップ化
+  const configByDate = {};
+  ((weekConfig && weekConfig.entries) || []).forEach(e => { configByDate[e.date] = e; });
+
+  // 状態を初期化
+  _wcState = { mondayStr, entries: {} };
+  list.forEach(h => {
+    const cfg = configByDate[h.date];
+    _wcState.entries[h.date] = {
+      date: h.date,
+      dayOfWeek: h.dayOfWeek,
+      name: h.name,
+      mode: cfg ? cfg.mode : '',
+      soakYes: cfg ? cfg.soakYes : false,
+      flipYes: cfg ? cfg.flipYes : false,
+      recorder: cfg ? cfg.recorder : '',
+      setAt: cfg ? cfg.setAt : ''
+    };
+  });
+
+  // 全祝日が設定済みか判定
+  const allSet = list.every(h => configByDate[h.date] && configByDate[h.date].mode);
+  const lastSetter = Object.values(configByDate).sort((a,b) => (b.setAt||'').localeCompare(a.setAt||''))[0];
+
+  let html = '<div class="sch-card week-config' + (allSet ? ' done' : '') + '">';
+  html += '<div class="sch-header"><span class="sch-icon">📅</span>今週の祝日設定';
+  if (allSet) html += '<span style="margin-left:12px;font-size:26px;color:#33691e;">✅設定済み</span>';
+  html += '</div>';
+  html += '<div class="sch-body">';
+
+  list.forEach(h => {
+    const st = _wcState.entries[h.date];
+    html += '<div class="wc-entry" data-date="' + esc(h.date) + '">';
+    html += '<div class="wc-entry-header">' + esc(h.date.slice(5).replace('-', '/')) + '（' + esc(h.dayOfWeek) + '）';
+    html += '<span class="wc-name">' + esc(h.name) + '</span></div>';
+    // モード選択
+    html += '<div class="wc-mode-row">';
+    ['通常', '半日', '休み'].forEach(m => {
+      const on = st.mode === m ? ' on' : '';
+      html += '<button type="button" class="wc-mode-btn' + on + '" data-mode="' + esc(m) + '" ';
+      html += 'onclick="wcSetMode(\'' + esc(h.date) + '\', \'' + esc(m) + '\')">' + esc(m) + '</button>';
+    });
+    html += '</div>';
+    // 半日オプション
+    const halfShow = st.mode === '半日' ? ' show' : '';
+    html += '<div class="wc-half-options' + halfShow + '" id="wc-half-' + esc(h.date) + '">';
+    ['浸水', '正転'].forEach(kind => {
+      const key = kind === '浸水' ? 'soakYes' : 'flipYes';
+      const yesOn = st[key] === true  ? ' on' : '';
+      const noOn  = st[key] === false ? ' on' : '';
+      html += '<div class="wc-toggle-row">';
+      html += '<span class="wc-toggle-label">' + esc(kind) + '</span>';
+      html += '<div class="wc-toggle-btns">';
+      html += '<button type="button" class="wc-toggle-btn' + yesOn + '" data-val="yes" ';
+      html += 'onclick="wcSetToggle(\'' + esc(h.date) + '\', \'' + esc(key) + '\', true)">やる</button>';
+      html += '<button type="button" class="wc-toggle-btn' + noOn + '" data-val="no" ';
+      html += 'onclick="wcSetToggle(\'' + esc(h.date) + '\', \'' + esc(key) + '\', false)">やらない</button>';
+      html += '</div></div>';
+    });
+    html += '</div>';
+    html += '</div>';
+  });
+
+  if (allSet && lastSetter) {
+    html += '<div class="wc-done-summary">';
+    html += '最終更新: ' + esc(lastSetter.recorder || '（記録者不明）') + ' ' + esc(lastSetter.setAt || '');
+    html += '</div>';
+  }
+
+  html += '<button type="button" class="wc-save-btn" onclick="wcSave()">💾 保存する</button>';
+  html += '</div></div>';
+  return html;
+}
+
+function wcSetMode(date, mode) {
+  const st = _wcState.entries[date];
+  if (!st) return;
+  st.mode = mode;
+  // モードボタンの見た目更新
+  const scope = document.querySelector('.wc-entry[data-date="' + date + '"]');
+  if (!scope) return;
+  scope.querySelectorAll('.wc-mode-btn').forEach(b => {
+    b.classList.toggle('on', b.dataset.mode === mode);
+  });
+  // 半日オプションの開閉
+  const half = document.getElementById('wc-half-' + date);
+  if (half) half.classList.toggle('show', mode === '半日');
+}
+
+function wcSetToggle(date, key, val) {
+  const st = _wcState.entries[date];
+  if (!st) return;
+  st[key] = val;
+  const scope = document.querySelector('.wc-entry[data-date="' + date + '"]');
+  if (!scope) return;
+  // 該当行のボタンの on/off を更新
+  const label = key === 'soakYes' ? '浸水' : '正転';
+  scope.querySelectorAll('.wc-toggle-row').forEach(row => {
+    const lbl = row.querySelector('.wc-toggle-label');
+    if (!lbl || lbl.textContent !== label) return;
+    row.querySelectorAll('.wc-toggle-btn').forEach(b => {
+      const isYes = b.dataset.val === 'yes';
+      b.classList.toggle('on', (isYes && val === true) || (!isYes && val === false));
+    });
+  });
+}
+
+async function wcSave() {
+  if (!checkRecorder()) return;
+  // 「半日」のとき浸水/正転が未選択ならエラー
+  const entries = Object.values(_wcState.entries).filter(e => e.mode);
+  for (const e of entries) {
+    if (e.mode === '半日') {
+      if (e.soakYes !== true && e.soakYes !== false) {
+        toast('❌ ' + e.date.slice(5) + ' の浸水「やる/やらない」を選んでください', 'error');
+        return;
+      }
+      if (e.flipYes !== true && e.flipYes !== false) {
+        toast('❌ ' + e.date.slice(5) + ' の正転「やる/やらない」を選んでください', 'error');
+        return;
+      }
+    }
+  }
+  if (entries.length === 0) {
+    toast('❌ 設定するモードを選んでください', 'error');
+    return;
+  }
+  const btns = document.querySelectorAll('.wc-save-btn');
+  btns.forEach(b => { b.disabled = true; b.textContent = '保存中…'; });
+  try {
+    await callAPI('saveWeekConfig', {
+      entries: entries.map(e => ({
+        date: e.date, mode: e.mode, soakYes: e.soakYes, flipYes: e.flipYes
+      })),
+      recorder: v('recorder-select')
+    });
+    toast('✅ 送信完了！');
+    // 再読み込みして最新状態を反映
+    loadSchedule(_currentScheduleDate || undefined);
+  } catch (err) {
+    toast('❌ エラー: ' + err.message, 'error');
+    btns.forEach(b => { b.disabled = false; b.textContent = '💾 保存する'; });
+  }
 }
 
 // 日付変更時の処理（date input の onchange から呼ばれる）
@@ -3357,11 +3698,14 @@ function groupByContainer(items, cssClass) {
   return html;
 }
 
-function renderSchedule(s, recStatus) {
+function renderSchedule(s, recStatus, holidays, weekConfig, mondayStr) {
   const el = document.getElementById('sch-content');
   const loading = document.getElementById('sch-loading');
   loading.style.display = 'none';
   el.style.display = 'block';
+
+  // 週次設定カード（祝日がある週のみ）
+  const weekCard = renderWeekConfigCard(holidays, weekConfig, mondayStr);
 
   // 休日
   if (s.isOff) {
@@ -3378,11 +3722,13 @@ function renderSchedule(s, recStatus) {
       offHtml += '<br><button type="button" class="sch-today-btn" onclick="onScheduleDateChange(\'' + esc(todayStr) + '\')">今日に戻る</button>';
     }
     offHtml += '</div>';
+    // 週次設定カード（休日でも編集できるように表示）
+    offHtml += weekCard;
     // 休日表示本体
     offHtml +=
       '<div class="sch-off">' +
         '<span class="off-icon">🏠</span>' +
-        '<span class="off-text">休日</span>' +
+        '<span class="off-text">' + esc(s.offReason || '休日') + '</span>' +
         '<div style="margin-top:14px;font-size:26px;color:#8e8e93;">別の日を確認する場合は上の日付をタップ</div>' +
       '</div>';
     el.innerHTML = offHtml;
@@ -3407,6 +3753,18 @@ function renderSchedule(s, recStatus) {
     html += '<br><button type="button" class="sch-today-btn" onclick="onScheduleDateChange(\'' + esc(todayStr) + '\')">今日に戻る</button>';
   }
   html += '</div>';
+
+  // --- 週次設定カード（祝日のある週のみ表示） ---
+  html += weekCard;
+
+  // --- 半日モードバナー（祝日平日の半日設定時） ---
+  if (s.halfDayMode === '半日') {
+    html += '<div class="halfday-banner">⏰ 今日は半日作業日（午前のみ）</div>';
+  }
+  // --- 祝日だが設定がない場合の注意喚起 ---
+  if (s.holidayConfigMissing) {
+    html += '<div class="halfday-banner" style="background:#ffebee;border-color:#c62828;color:#b71c1c;">⚠️ 今日は祝日ですが設定がありません。上の「今週の祝日設定」から設定してください</div>';
+  }
 
   // --- ⚠️ 記録忘れアラート（未記録あれば最上部に表示）---
   if (recStatus && !recStatus.skip && recStatus.issues && recStatus.issues.length > 0) {
@@ -3468,10 +3826,13 @@ function renderSchedule(s, recStatus) {
   html += '</div></div>';
 
   // --- 2. パック浸水 ---
+  const halfDaySoakOff = s.halfDayMode === '半日' && s.halfDayConfig && s.halfDayConfig.soakYes === false;
   html += '<div class="sch-card' + (s.soakDay ? ' today-active' : '') + '">';
   html += '<div class="sch-header"><span class="sch-icon">💧</span>パック浸水</div>';
   html += '<div class="sch-body">';
-  if (s.soakDay) {
+  if (halfDaySoakOff) {
+    html += '<div class="sch-skip">🚫 今日はやりません（半日モード設定）</div>';
+  } else if (s.soakDay) {
     html += '<div style="font-size:32px;font-weight:700;color:#01579b;margin-bottom:10px;">';
     html += '今日は浸水日！　対象: ' + esc(s.soakGroupName) + '</div>';
     // 対象列をコンテナごとにまとめる
@@ -3483,8 +3844,8 @@ function renderSchedule(s, recStatus) {
   } else {
     html += '<div class="sch-next">次回浸水: <strong>' + esc(s.soakDayOfWeek) + '曜日 — ' + esc(s.nextSoakGroupName) + 'グループ</strong></div>';
   }
-  // 特殊イベント（袋外し）
-  if (s.specialEvents && s.specialEvents.length > 0) {
+  // 特殊イベント（袋外し）— 半日で「浸水やらない」設定なら非表示
+  if (!halfDaySoakOff && s.specialEvents && s.specialEvents.length > 0) {
     s.specialEvents.forEach(ev => {
       html += '<div class="sch-alert">⚠️ ' + esc(ev.container) + '-' + esc(ev.col) +
         '（' + esc(ev.group) + '）: パック浸水+' + esc(ev.type) + '（' + esc(ev.reason) + '）</div>';
@@ -3493,10 +3854,13 @@ function renderSchedule(s, recStatus) {
   html += '</div></div>';
 
   // --- 3. 正転 ---
+  const halfDayFlipOff = s.halfDayMode === '半日' && s.halfDayConfig && s.halfDayConfig.flipYes === false;
   html += '<div class="sch-card' + (s.flipDay ? ' today-active' : '') + '">';
   html += '<div class="sch-header"><span class="sch-icon">🔄</span>正転</div>';
   html += '<div class="sch-body">';
-  if (s.flipDay && s.flipDetails && s.flipDetails.length > 0) {
+  if (halfDayFlipOff) {
+    html += '<div class="sch-skip">🚫 今日はやりません（半日モード設定）</div>';
+  } else if (s.flipDay && s.flipDetails && s.flipDetails.length > 0) {
     html += '<div style="font-size:32px;font-weight:700;color:#e65100;margin-bottom:14px;">今日は正転日！</div>';
     // コンテナごとにグループ化
     const flipByContainer = {};
