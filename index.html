@@ -1253,6 +1253,12 @@
     }
     .custom-item .ci-num-row .ci-field input:focus { border-color: #2e7d32; }
 
+    /* レポートタブの売上入力は、個数と金額を縦積みにする（スマホ表示用） */
+    #rp-sales-list .custom-item .ci-num-row {
+      flex-direction: column;
+      gap: 12px;
+    }
+
     /* ============================================================
        📱 モバイル用オーバーライド（viewport幅 ≤ 768px）
        元のデザインはタブレット/PC向けの大きな値を使っているため、
