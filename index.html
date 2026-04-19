@@ -1948,6 +1948,147 @@
     <button class="submit-btn" onclick="submitShipping(event)">✅ 送信する</button>
   </div>
 
+  <!-- ===== レポート ===== -->
+  <div class="panel" id="panel-report">
+
+    <div class="section-label">📅 表示する日</div>
+    <div class="card">
+      <div class="row">
+        <span class="row-label">日付</span>
+        <input type="date" id="rp-date" onchange="loadReport()">
+      </div>
+      <div class="row" style="justify-content:center; gap:16px;">
+        <button type="button" class="seg-btn active" id="rp-seg-day" onclick="setReportMode('day')">日次</button>
+        <button type="button" class="seg-btn" id="rp-seg-month" onclick="setReportMode('month')">月次</button>
+      </div>
+    </div>
+
+    <div class="section-label">📊 売上サマリ</div>
+    <div class="card" id="rp-summary">
+      <div style="text-align:center; color:#888; padding:20px;">読み込み中…</div>
+    </div>
+
+    <div class="section-label">📦 現在の理論在庫</div>
+    <div class="card" id="rp-inventory-summary">
+      <div style="text-align:center; color:#888; padding:20px;">読み込み中…</div>
+    </div>
+
+    <!-- 売上の手入力 -->
+    <div class="section-label">✏️ 売上の手入力（訪問時・メール未着店舗用）</div>
+    <div class="card">
+      <div class="row">
+        <span class="row-label">売上日</span>
+        <input type="date" id="rp-sales-date">
+      </div>
+      <div class="row">
+        <span class="row-label">出荷先</span>
+        <select id="rp-sales-dest" onchange="updateSalesFee()">
+          <option value="">選択</option>
+          <optgroup label="━ 藤増ストアー">
+            <option value="藤増ストアー 知井宮店|20">知井宮店</option>
+          </optgroup>
+          <optgroup label="━ えびす市場">
+            <option value="えびす市場|15">えびす市場</option>
+          </optgroup>
+          <optgroup label="━ くるみ市">
+            <option value="くるみ市|17">くるみ市</option>
+          </optgroup>
+          <optgroup label="━ グッディー (17%)">
+            <option value="グッディー 医大通り店|17">医大通り店</option>
+            <option value="グッディー 北部店|17">北部店</option>
+            <option value="グッディー 木次店|17">木次店</option>
+            <option value="グッディー 平田店|17">平田店</option>
+            <option value="グッディー 大田店|17">大田店</option>
+          </optgroup>
+          <optgroup label="━ ラピタ (22%)">
+            <option value="ラピタ 本店|22">本店</option>
+            <option value="ラピタ 湖陵店|22">湖陵店</option>
+            <option value="ラピタ 浜山店|22">浜山店</option>
+            <option value="ラピタ みなみ店|22">みなみ店</option>
+            <option value="ラピタ 平田店|22">平田店</option>
+          </optgroup>
+          <optgroup label="━ 直接取引（手数料なし）">
+            <option value="ひまわり福祉会|0">ひまわり福祉会</option>
+            <option value="田中豆腐店|0">田中豆腐店</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="fee-row" id="rp-sales-fee">
+        <span>手数料：</span><span id="rp-sales-fee-val"></span>
+      </div>
+    </div>
+
+    <div class="section-label">売れた商品</div>
+    <div class="card">
+      <div id="rp-sales-list"></div>
+      <button type="button" class="add-item-btn" onclick="addSalesItem()">
+        ＋ 商品を追加
+      </button>
+    </div>
+
+    <button class="submit-btn" onclick="submitManualSales(event)">💰 売上を記録する</button>
+
+    <!-- 実在庫の手入力 -->
+    <div class="section-label">📦 実在庫の手入力（店舗訪問時）</div>
+    <div class="card">
+      <div class="row">
+        <span class="row-label">確認日</span>
+        <input type="date" id="rp-inv-date">
+      </div>
+      <div class="row">
+        <span class="row-label">出荷先</span>
+        <select id="rp-inv-dest" onchange="loadInventoryForm()">
+          <option value="">選択</option>
+          <optgroup label="━ 藤増ストアー">
+            <option value="藤増ストアー 知井宮店">知井宮店</option>
+          </optgroup>
+          <optgroup label="━ えびす市場">
+            <option value="えびす市場">えびす市場</option>
+          </optgroup>
+          <optgroup label="━ くるみ市">
+            <option value="くるみ市">くるみ市</option>
+          </optgroup>
+          <optgroup label="━ グッディー">
+            <option value="グッディー 医大通り店">医大通り店</option>
+            <option value="グッディー 北部店">北部店</option>
+            <option value="グッディー 木次店">木次店</option>
+            <option value="グッディー 平田店">平田店</option>
+            <option value="グッディー 大田店">大田店</option>
+          </optgroup>
+          <optgroup label="━ ラピタ">
+            <option value="ラピタ 本店">本店</option>
+            <option value="ラピタ 湖陵店">湖陵店</option>
+            <option value="ラピタ 浜山店">浜山店</option>
+            <option value="ラピタ みなみ店">みなみ店</option>
+            <option value="ラピタ 平田店">平田店</option>
+          </optgroup>
+          <optgroup label="━ 直接取引">
+            <option value="ひまわり福祉会">ひまわり福祉会</option>
+            <option value="田中豆腐店">田中豆腐店</option>
+          </optgroup>
+        </select>
+      </div>
+    </div>
+
+    <div class="section-label">棚にある在庫数</div>
+    <div class="card">
+      <div id="rp-inv-list">
+        <div style="text-align:center; color:#888; padding:12px;">出荷先を選択すると、記録すべき商品が表示されます</div>
+      </div>
+      <button type="button" class="add-item-btn" onclick="addInventoryItem()">
+        ＋ 商品を追加
+      </button>
+    </div>
+
+    <div class="row" style="padding:0 8px;">
+      <span class="row-label">メモ</span>
+      <textarea id="rp-inv-memo" placeholder="賞味期限切れ撤去など"></textarea>
+    </div>
+
+    <button class="submit-btn" onclick="submitManualInventory(event)">📦 実在庫を記録する</button>
+
+  </div>
+
   <!-- ===== 菌床 ===== -->
   <div class="panel" id="panel-bed">
 
@@ -2023,6 +2164,10 @@
     <span class="t-icon-wrap"><span class="t-icon">🚚</span></span>
     <span class="t-label">出荷</span>
   </button>
+  <button class="tab-btn" onclick="showPanel('report',this)">
+    <span class="t-icon-wrap"><span class="t-icon">📈</span></span>
+    <span class="t-label">レポート</span>
+  </button>
   <button class="tab-btn" onclick="showPanel('bed',this)">
     <span class="t-icon-wrap"><span class="t-icon">🌱</span></span>
     <span class="t-label">菌床</span>
@@ -2095,8 +2240,16 @@ function localTimeStr(d) {
 function refreshToToday() {
   const today = localDateStr();
   const now   = localTimeStr();
-  ['d-date','t-date','an-date','pk-date','pr-date','sh-date','sh-mfg','bed-date']
+  ['d-date','t-date','an-date','pk-date','pr-date','sh-date','sh-mfg','bed-date','rp-inv-date']
     .forEach(id => { const el=document.getElementById(id); if(el) el.value=today; });
+  // レポート表示日・売上入力日は前日をデフォルトに
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yDay = localDateStr(yesterday);
+  ['rp-date','rp-sales-date'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = yDay;
+  });
   const tt = document.getElementById('t-time');
   if (tt) tt.value = now;
 
@@ -2190,6 +2343,11 @@ function showPanel(name, btn){
   // 予定タブを開いたら、過去・未来を閲覧中なら今日に戻す
   if (name === 'schedule' && _currentScheduleDate) {
     loadSchedule();  // 今日の予定を読み込み
+  }
+  // レポートタブを開いたら売上サマリと在庫状況を読み込み
+  if (name === 'report') {
+    loadReport();
+    loadInventoryStatus();
   }
   window.scrollTo({top:0, behavior:'instant'});
 }
@@ -2597,6 +2755,304 @@ async function submitBed(e){
     document.getElementById('bed-variety').value='';
     document.getElementById('bed-discard').value='';
   }catch(err){ if(!err.isCancel) toast('❌ エラー: '+err.message,'error'); }
+  resetBtn(btn);
+}
+
+/* ===================================================
+   📈 レポートタブ
+=================================================== */
+let _reportMode = 'day';  // 'day' | 'month'
+let _inventoryCache = [];  // 直近の在庫状況（店舗別の商品候補に使う）
+
+function setReportMode(mode) {
+  _reportMode = mode;
+  document.getElementById('rp-seg-day').classList.toggle('active', mode === 'day');
+  document.getElementById('rp-seg-month').classList.toggle('active', mode === 'month');
+  loadReport();
+}
+
+async function loadReport() {
+  const elSum = document.getElementById('rp-summary');
+  const dateStr = v('rp-date');
+  if (!dateStr) return;
+  elSum.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">読み込み中…</div>';
+  try {
+    let startDate, endDate;
+    if (_reportMode === 'month') {
+      const d = new Date(dateStr + 'T00:00:00');
+      const first = new Date(d.getFullYear(), d.getMonth(), 1);
+      const last  = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+      startDate = localDateStr(first);
+      endDate   = localDateStr(last);
+    } else {
+      startDate = dateStr;
+      endDate   = dateStr;
+    }
+    const res = await callAPI('getSalesReport', { startDate, endDate });
+    renderReport(res, _reportMode);
+  } catch (err) {
+    elSum.innerHTML = '<div style="color:#c62828; padding:12px;">❌ ' + esc(err.message) + '</div>';
+  }
+}
+
+function renderReport(res, mode) {
+  const elSum = document.getElementById('rp-summary');
+  const rows = (res && res.rows) || [];
+  if (rows.length === 0) {
+    elSum.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">'
+      + esc(mode === 'month' ? '当月の売上データはまだありません' : 'この日の売上データはありません')
+      + '</div>';
+    return;
+  }
+  // 店舗別集計
+  const byDest = {};
+  let totalQty = 0, totalAmt = 0, totalNet = 0;
+  rows.forEach(r => {
+    const d = byDest[r.dest] = byDest[r.dest] || { qty: 0, amt: 0, net: 0, items: [] };
+    d.qty += r.qty; d.amt += r.amount; d.net += r.net;
+    d.items.push(r);
+    totalQty += r.qty; totalAmt += r.amount; totalNet += r.net;
+  });
+  const destKeys = Object.keys(byDest).sort();
+  const headTitle = mode === 'month'
+    ? ('月次：' + esc(res.startDate) + '〜' + esc(res.endDate))
+    : ('日次：' + esc(res.startDate));
+  let html = '<div style="font-weight:700; color:#1b5e20; padding:4px 0 10px; font-size:15px;">' + headTitle + '</div>';
+  html += '<table style="width:100%; border-collapse:collapse; font-size:14px;">';
+  html += '<tr style="background:#e8f5e9;"><th style="text-align:left; padding:6px;">店舗</th><th style="text-align:right; padding:6px;">個数</th><th style="text-align:right; padding:6px;">売上(円)</th><th style="text-align:right; padding:6px;">入金予定(円)</th></tr>';
+  destKeys.forEach(k => {
+    const d = byDest[k];
+    html += '<tr style="border-bottom:1px solid #eee;">';
+    html += '<td style="padding:6px;">' + esc(k) + '</td>';
+    html += '<td style="text-align:right; padding:6px;">' + d.qty + '</td>';
+    html += '<td style="text-align:right; padding:6px;">' + d.amt.toLocaleString() + '</td>';
+    html += '<td style="text-align:right; padding:6px;">' + d.net.toLocaleString() + '</td>';
+    html += '</tr>';
+    d.items.forEach(it => {
+      html += '<tr style="background:#fafafa; color:#666; font-size:12px;">';
+      html += '<td style="padding:3px 6px 3px 22px;">└ ' + esc(it.product) + (it.source ? ' <span style="color:#999;">['+esc(it.source)+']</span>' : '') + '</td>';
+      html += '<td style="text-align:right; padding:3px 6px;">' + it.qty + '</td>';
+      html += '<td style="text-align:right; padding:3px 6px;">' + it.amount.toLocaleString() + '</td>';
+      html += '<td style="text-align:right; padding:3px 6px;">' + it.net.toLocaleString() + '</td>';
+      html += '</tr>';
+    });
+  });
+  html += '<tr style="background:#c8e6c9; font-weight:700;">';
+  html += '<td style="padding:8px;">合計</td>';
+  html += '<td style="text-align:right; padding:8px;">' + totalQty + '</td>';
+  html += '<td style="text-align:right; padding:8px;">' + totalAmt.toLocaleString() + '</td>';
+  html += '<td style="text-align:right; padding:8px;">' + totalNet.toLocaleString() + '</td>';
+  html += '</tr>';
+  html += '</table>';
+  elSum.innerHTML = html;
+}
+
+async function loadInventoryStatus() {
+  const elInv = document.getElementById('rp-inventory-summary');
+  elInv.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">読み込み中…</div>';
+  try {
+    const res = await callAPI('getInventoryStatus', {});
+    _inventoryCache = (res && res.items) || [];
+    if (_inventoryCache.length === 0) {
+      elInv.innerHTML = '<div style="text-align:center; color:#888; padding:12px;">計算対象の在庫がありません</div>';
+      return;
+    }
+    // 店舗別にグループ化
+    const byDest = {};
+    _inventoryCache.forEach(it => {
+      byDest[it.dest] = byDest[it.dest] || [];
+      byDest[it.dest].push(it);
+    });
+    let html = '<div style="font-size:12px; color:#888; padding:0 0 8px;">（直近の実在庫記録を起点に、以降の出荷-売上で計算）</div>';
+    Object.keys(byDest).sort().forEach(dest => {
+      html += '<div style="padding:6px 0; border-bottom:1px solid #eee;">';
+      html += '<div style="font-weight:600; color:#1b5e20;">' + esc(dest) + '</div>';
+      byDest[dest].forEach(it => {
+        const color = it.theoretical < 0 ? '#c62828' : '#333';
+        html += '<div style="padding:2px 12px; color:' + color + '; font-size:13px; display:flex; justify-content:space-between;">';
+        html += '<span>' + esc(it.product) + '</span><span>' + it.theoretical + ' 個</span>';
+        html += '</div>';
+      });
+      html += '</div>';
+    });
+    elInv.innerHTML = html;
+  } catch (err) {
+    elInv.innerHTML = '<div style="color:#c62828; padding:12px;">❌ ' + esc(err.message) + '</div>';
+  }
+}
+
+function updateSalesFee() {
+  const val = v('rp-sales-dest');
+  const row  = document.getElementById('rp-sales-fee');
+  const span = document.getElementById('rp-sales-fee-val');
+  if (val) {
+    span.textContent = val.split('|')[1] + '%';
+    row.classList.add('show');
+  } else {
+    row.classList.remove('show');
+  }
+}
+
+function addSalesItem(prefill) {
+  const list = document.getElementById('rp-sales-list');
+  const row = document.createElement('div');
+  row.className = 'custom-item';
+  const nameVal  = prefill && prefill.name  ? esc(prefill.name)  : '';
+  row.innerHTML =
+    '<div class="ci-name-row">' +
+      '<input type="text" class="ci-name" placeholder="商品名（例: しいたけパック）" value="' + nameVal + '">' +
+      '<button type="button" class="ci-remove" onclick="removeSalesItem(this)">×</button>' +
+    '</div>' +
+    '<div class="ci-num-row">' +
+      '<div class="ci-field">' +
+        '<label>売れた個数</label>' +
+        '<input type="number" class="ci-qty" inputmode="numeric" placeholder="0">' +
+      '</div>' +
+      '<div class="ci-field">' +
+        '<label>売上金額(円)</label>' +
+        '<input type="number" class="ci-amt" inputmode="numeric" placeholder="0">' +
+      '</div>' +
+    '</div>';
+  list.appendChild(row);
+  if (!nameVal) row.querySelector('.ci-name').focus();
+}
+
+function removeSalesItem(btn) {
+  const row = btn.closest('.custom-item');
+  if (row) row.remove();
+}
+
+async function submitManualSales(e) {
+  if (!checkRecorder()) return;
+  const btn = e.target; startBtn(btn);
+  const dv = v('rp-sales-dest');
+  const dest = dv ? dv.split('|')[0] : '';
+  const feeRate = dv ? Number(dv.split('|')[1]) : 0;
+  const date = v('rp-sales-date');
+  if (!dest || !date) {
+    toast('❌ 日付と出荷先を選択してください', 'error');
+    resetBtn(btn); return;
+  }
+  const items = [];
+  document.querySelectorAll('#rp-sales-list .custom-item').forEach(item => {
+    const name = item.querySelector('.ci-name').value.trim();
+    const qty  = Number(item.querySelector('.ci-qty').value) || 0;
+    const amt  = Number(item.querySelector('.ci-amt').value) || 0;
+    if (name && qty > 0) {
+      const price = qty > 0 ? Math.round(amt / qty) : 0;
+      items.push({
+        date: date, dest: dest, product: name,
+        qty: qty, price: price, amount: amt, feeRate: feeRate,
+        net: Math.round(amt * (1 - feeRate / 100))
+      });
+    }
+  });
+  if (items.length === 0) {
+    toast('❌ 商品と個数を入力してください', 'error');
+    resetBtn(btn); return;
+  }
+  try {
+    await callAPI('submitSales', {
+      items: items, source: 'manual', recorder: v('recorder-select')
+    });
+    toast('✅ 送信完了！');
+    document.getElementById('rp-sales-list').innerHTML = '';
+    document.getElementById('rp-sales-dest').value = '';
+    document.getElementById('rp-sales-fee').classList.remove('show');
+    loadReport();
+    loadInventoryStatus();
+  } catch (err) {
+    toast('❌ エラー: ' + err.message, 'error');
+  }
+  resetBtn(btn);
+}
+
+function loadInventoryForm() {
+  const dest = v('rp-inv-dest');
+  const list = document.getElementById('rp-inv-list');
+  list.innerHTML = '';
+  if (!dest) {
+    list.innerHTML = '<div style="text-align:center; color:#888; padding:12px;">出荷先を選択すると、記録すべき商品が表示されます</div>';
+    return;
+  }
+  // キャッシュから該当店舗の商品を出す
+  const candidates = _inventoryCache.filter(it => it.dest === dest);
+  if (candidates.length === 0) {
+    list.innerHTML = '<div style="text-align:center; color:#888; padding:12px;">理論在庫0のため商品が自動表示されません。＋ボタンで追加してください</div>';
+    return;
+  }
+  candidates.forEach(it => addInventoryItem({ name: it.product, theoretical: it.theoretical }));
+}
+
+function addInventoryItem(prefill) {
+  const list = document.getElementById('rp-inv-list');
+  // 空メッセージを消す
+  if (list.querySelector('.custom-item') == null) list.innerHTML = '';
+  const row = document.createElement('div');
+  row.className = 'custom-item';
+  const nameVal = prefill && prefill.name ? esc(prefill.name) : '';
+  const theoStr = (prefill && prefill.theoretical != null)
+    ? '<div style="font-size:11px; color:#888; padding:0 2px 4px;">理論在庫: ' + prefill.theoretical + ' 個</div>' : '';
+  row.innerHTML =
+    '<div class="ci-name-row">' +
+      '<input type="text" class="ci-name" placeholder="商品名" value="' + nameVal + '">' +
+      '<button type="button" class="ci-remove" onclick="removeInventoryItem(this)">×</button>' +
+    '</div>' +
+    theoStr +
+    '<div class="ci-num-row">' +
+      '<div class="ci-field">' +
+        '<label>棚にある個数</label>' +
+        '<input type="number" class="ci-actual" inputmode="numeric" placeholder="0">' +
+      '</div>' +
+    '</div>';
+  list.appendChild(row);
+  if (!nameVal) row.querySelector('.ci-name').focus();
+}
+
+function removeInventoryItem(btn) {
+  const row = btn.closest('.custom-item');
+  if (row) row.remove();
+  const list = document.getElementById('rp-inv-list');
+  if (list.querySelector('.custom-item') == null) {
+    list.innerHTML = '<div style="text-align:center; color:#888; padding:12px;">＋ボタンで商品を追加してください</div>';
+  }
+}
+
+async function submitManualInventory(e) {
+  if (!checkRecorder()) return;
+  const btn = e.target; startBtn(btn);
+  const dest = v('rp-inv-dest');
+  const date = v('rp-inv-date');
+  const memo = v('rp-inv-memo');
+  if (!dest || !date) {
+    toast('❌ 日付と出荷先を選択してください', 'error');
+    resetBtn(btn); return;
+  }
+  const items = [];
+  document.querySelectorAll('#rp-inv-list .custom-item').forEach(item => {
+    const name = item.querySelector('.ci-name').value.trim();
+    const actual = Number(item.querySelector('.ci-actual').value) || 0;
+    if (name) {
+      items.push({ dest: dest, product: name, actual: actual });
+    }
+  });
+  if (items.length === 0) {
+    toast('❌ 商品を入力してください', 'error');
+    resetBtn(btn); return;
+  }
+  try {
+    await callAPI('submitInventory', {
+      date: date, items: items, memo: memo, recorder: v('recorder-select')
+    });
+    toast('✅ 送信完了！');
+    document.getElementById('rp-inv-list').innerHTML = '<div style="text-align:center; color:#888; padding:12px;">出荷先を選択すると、記録すべき商品が表示されます</div>';
+    document.getElementById('rp-inv-dest').value = '';
+    clear('rp-inv-memo');
+    loadInventoryStatus();
+    loadReport();
+  } catch (err) {
+    toast('❌ エラー: ' + err.message, 'error');
+  }
   resetBtn(btn);
 }
 
