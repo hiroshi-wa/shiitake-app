@@ -2699,9 +2699,14 @@ function showDupDialog(duplicates) {
     duplicates.forEach(d => {
       const row = document.createElement('div');
       row.className = 'dup-item';
-      row.innerHTML =
-        '<span class="dup-time">🕐 ' + esc(d.time) + '</span>' +
-        '<span class="dup-rec">👤 ' + esc(d.recorder) + '</span>';
+      let html = '<span class="dup-time">🕐 ' + esc(d.time) + '</span>' +
+                 '<span class="dup-rec">👤 ' + esc(d.recorder) + '</span>';
+      // 分析用温度湿度の場合、重複したコンテナ番号を表示
+      if (Array.isArray(d.containers) && d.containers.length > 0) {
+        const label = d.containers.map(c => '第' + esc(c) + 'コンテナ').join('・');
+        html += '<span class="dup-rec" style="color:#c62828;">🌡️ ' + label + '</span>';
+      }
+      row.innerHTML = html;
       list.appendChild(row);
     });
     const msg = duplicates.length === 1
@@ -2731,6 +2736,11 @@ async function postWithCheck(payload) {
     const checkPayload = { formType: payload.formType, date: payload.date };
     // 温度記録は朝夕を識別するのでtimeOfDayも送る
     if (payload.timeOfDay) checkPayload.timeOfDay = payload.timeOfDay;
+    // 分析用温度湿度はコンテナ単位で重複判定するため t/h 値も送る
+    if (payload.formType === 'analysisTemp') {
+      checkPayload.t1 = payload.t1; checkPayload.t2 = payload.t2; checkPayload.t3 = payload.t3;
+      checkPayload.h1 = payload.h1; checkPayload.h2 = payload.h2; checkPayload.h3 = payload.h3;
+    }
     const res = await checkDup(checkPayload);
     if (res && res.duplicates && res.duplicates.length > 0) {
       const ok = await showDupDialog(res.duplicates);
@@ -3159,9 +3169,24 @@ function renderReport(res, mode) {
       html += '<td style="text-align:right; padding:6px;">' + d.amt.toLocaleString() + '</td>';
       html += '<td style="text-align:right; padding:6px;">' + d.net.toLocaleString() + '</td>';
       html += '</tr>';
+      // 同じ商品名でまとめる（source が異なる場合はカンマ区切りで併記）
+      const agg = {};
       d.items.forEach(it => {
+        const key = it.product || '';
+        if (!agg[key]) {
+          agg[key] = { product: it.product, qty: 0, amount: 0, net: 0, sources: new Set() };
+        }
+        agg[key].qty    += it.qty    || 0;
+        agg[key].amount += it.amount || 0;
+        agg[key].net    += it.net    || 0;
+        if (it.source) agg[key].sources.add(it.source);
+      });
+      // 売上金額の大きい順
+      const aggItems = Object.values(agg).sort((a, b) => b.amount - a.amount);
+      aggItems.forEach(it => {
+        const srcLabel = it.sources.size > 0 ? [...it.sources].join(',') : '';
         html += '<tr style="background:#fafafa; color:#666; font-size:12px;">';
-        html += '<td style="padding:3px 6px 3px 30px;">└ ' + esc(it.product) + (it.source ? ' <span style="color:#999;">['+esc(it.source)+']</span>' : '') + '</td>';
+        html += '<td style="padding:3px 6px 3px 30px;">└ ' + esc(it.product) + (srcLabel ? ' <span style="color:#999;">['+esc(srcLabel)+']</span>' : '') + '</td>';
         html += '<td style="text-align:right; padding:3px 6px;">' + it.qty + '</td>';
         html += '<td style="text-align:right; padding:3px 6px;">' + it.amount.toLocaleString() + '</td>';
         html += '<td style="text-align:right; padding:3px 6px;">' + it.net.toLocaleString() + '</td>';
