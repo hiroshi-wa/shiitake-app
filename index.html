@@ -2904,24 +2904,41 @@ async function loadInventoryStatus() {
       elInv.innerHTML = '<div style="text-align:center; color:#888; padding:12px;">計算対象の在庫がありません</div>';
       return;
     }
-    // 店舗別にグループ化
-    const byDest = {};
+
+    // グループ → 店舗 → 商品 の3段階にまとめる
+    const GROUPS = ['グッディー', 'ラピタ', 'その他'];
+    const GROUP_COLOR = { 'グッディー':'#388e3c', 'ラピタ':'#1565c0', 'その他':'#6d4c41' };
+    const GROUP_BG    = { 'グッディー':'#e8f5e9', 'ラピタ':'#e3f2fd', 'その他':'#efebe9' };
+    const grouped = { 'グッディー':{}, 'ラピタ':{}, 'その他':{} };
     _inventoryCache.forEach(it => {
-      byDest[it.dest] = byDest[it.dest] || [];
-      byDest[it.dest].push(it);
+      const g = _getDestGroup(it.dest);
+      grouped[g][it.dest] = grouped[g][it.dest] || [];
+      grouped[g][it.dest].push(it);
     });
+
     let html = '<div style="font-size:12px; color:#888; padding:0 0 8px;">（直近の実在庫記録を起点に、以降の出荷-売上で計算）</div>';
-    Object.keys(byDest).sort().forEach(dest => {
-      html += '<div style="padding:6px 0; border-bottom:1px solid #eee;">';
-      html += '<div style="font-weight:600; color:#1b5e20;">' + esc(dest) + '</div>';
-      byDest[dest].forEach(it => {
-        const color = it.theoretical < 0 ? '#c62828' : '#333';
-        html += '<div style="padding:2px 12px; color:' + color + '; font-size:13px; display:flex; justify-content:space-between;">';
-        html += '<span>' + esc(it.product) + '</span><span>' + it.theoretical + ' 個</span>';
+
+    GROUPS.forEach(g => {
+      const stores = grouped[g];
+      const storeKeys = Object.keys(stores).sort();
+      if (storeKeys.length === 0) return;
+
+      // グループヘッダー
+      html += '<div style="background:' + GROUP_BG[g] + '; border-top:2px solid ' + GROUP_COLOR[g] + '; padding:6px 8px; font-weight:700; color:' + GROUP_COLOR[g] + '; margin-top:6px;">▼ ' + esc(g) + 'グループ</div>';
+
+      storeKeys.forEach(dest => {
+        html += '<div style="padding:6px 0; border-bottom:1px solid #eee;">';
+        html += '<div style="font-weight:600; padding-left:8px;">' + esc(dest) + '</div>';
+        stores[dest].forEach(it => {
+          const color = it.theoretical < 0 ? '#c62828' : '#333';
+          html += '<div style="padding:2px 18px; color:' + color + '; font-size:13px; display:flex; justify-content:space-between;">';
+          html += '<span>' + esc(it.product) + '</span><span>' + it.theoretical + ' 個</span>';
+          html += '</div>';
+        });
         html += '</div>';
       });
-      html += '</div>';
     });
+
     elInv.innerHTML = html;
   } catch (err) {
     elInv.innerHTML = '<div style="color:#c62828; padding:12px;">❌ ' + esc(err.message) + '</div>';
