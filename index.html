@@ -1430,6 +1430,54 @@
     }
 
     /* ============================================================
+       🖥️ PC用オーバーライド（viewport幅 ≥ 769px）
+       デフォルトはスマホタッチ向けの大型サイズ。PCでは読みやすい
+       コンパクトサイズに縮小する（スマホレイアウトは変更しない）
+    ============================================================ */
+    @media (min-width: 769px) {
+      :root {
+        --navbar-h: 58px;
+        --recorder-h: 50px;
+        --tabbar-h: 58px;
+      }
+
+      /* ナビゲーションバー */
+      #navbar-inner { height: 58px !important; padding: 0 20px !important; gap: 10px; }
+      #navbar-icon  { font-size: 26px !important; }
+      #navbar-title { font-size: 20px !important; }
+      #navbar-sub   { font-size: 14px !important; }
+
+      /* 記録者バー */
+      #recorder-bar { height: 50px; padding: 0 16px !important; gap: 12px; }
+      #recorder-bar .rec-icon  { font-size: 20px; }
+      #recorder-bar .rec-label { font-size: 15px !important; }
+      #recorder-bar select     { height: 36px; font-size: 15px; border-radius: 10px; padding: 0 12px; border-width: 1px; }
+
+      /* タブバー */
+      #tabbar {
+        height: calc(58px + env(safe-area-inset-bottom, 0px));
+        padding-top: 4px;
+        padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
+        align-items: flex-end !important;
+      }
+      .t-icon-wrap { width: 44px !important; height: 30px !important; border-radius: 15px !important; }
+      .tab-btn .t-icon  { font-size: 22px !important; }
+      .tab-btn .t-label { font-size: 12px !important; }
+      .tab-btn { gap: 2px !important; justify-content: flex-end !important; padding-bottom: 4px !important; }
+
+      /* コンテンツ余白 */
+      body.schedule-mode #content { padding-top: calc(var(--sat) + var(--navbar-h) + 6px); }
+
+      /* カード内文字も適度に縮小 */
+      .sch-body div[style*="font-size:30px"],
+      .sch-body div[style*="font-size:32px"] { font-size: 18px !important; }
+      .sch-body div[style*="font-size:38px"],
+      .sch-body div[style*="font-size:40px"],
+      .sch-body div[style*="font-size:44px"],
+      .sch-body div[style*="font-size:48px"] { font-size: 22px !important; }
+    }
+
+    /* ============================================================
        📱 モバイル用オーバーライド（viewport幅 ≤ 768px）
        元のデザインはタブレット/PC向けの大きな値を使っているため、
        スマホでは全体的に小さめに調整する
@@ -3843,12 +3891,20 @@ function renderSchedule(s, recStatus, holidays, weekConfig, mondayStr) {
   html += '<div>';
   const harvestCls = s.harvestType === '小獲り' ? 'harvest-ko' : 'harvest-chu';
   html += groupByContainer(s.harvestInfo || [], harvestCls);
-  // 廃棄週で追加された列があれば注記
+  // 追加理由がある列（廃棄週・搬入直後）を注記
   const addedHarvest = (s.harvestInfo || []).filter(h => h.addedReason);
   if (addedHarvest.length > 0) {
-    html += '<div style="margin-top:8px;font-size:24px;color:#8e8e93;">（うち ' +
-      esc([...new Set(addedHarvest.map(h => h.container + '-' + h.col))].join(', ')) +
-      ' は廃棄週のため追加）</div>';
+    const byReason = {};
+    addedHarvest.forEach(h => {
+      const r = h.addedReason || '追加';
+      if (!byReason[r]) byReason[r] = [];
+      byReason[r].push(h.container + '-' + h.col);
+    });
+    const notes = Object.entries(byReason).map(([r, cols]) => {
+      const label = r === '搬入直後' ? '搬入直後週（浸水・正転なし）' : r + 'のため追加';
+      return '（' + esc([...new Set(cols)].join(', ')) + ' : ' + label + '）';
+    });
+    html += '<div style="margin-top:8px;font-size:24px;color:#8e8e93;">' + notes.join(' ') + '</div>';
   }
   html += '</div>';
   html += '</div></div>';
@@ -3863,12 +3919,21 @@ function renderSchedule(s, recStatus, holidays, weekConfig, mondayStr) {
   } else if (s.soakDay) {
     html += '<div style="font-size:32px;font-weight:700;color:#01579b;margin-bottom:10px;">';
     html += '今日は浸水日！　対象: ' + esc(s.soakGroupName) + '</div>';
-    // 対象列をコンテナごとにまとめる
+    // 対象列をコンテナごとにまとめる（搬入直後週の列は除外）
+    const postSet = new Set((s.postArrivalCols || []).map(p => p.container + '-' + p.col));
     const soakList = [];
     for (let c = 1; c <= 3; c++) {
-      s.soakColumns.forEach(col => soakList.push({ container: c, col }));
+      s.soakColumns.forEach(col => {
+        if (!postSet.has(c + '-' + col)) soakList.push({ container: c, col });
+      });
     }
     html += '<div>' + groupByContainer(soakList, 'soak') + '</div>';
+    if (postSet.size > 0) {
+      const postLabels = (s.postArrivalCols || []).map(p => p.container + '-' + p.col);
+      html += '<div style="margin-top:8px;font-size:24px;color:#e65100;">✋ ' +
+        esc([...new Set(postLabels)].join(', ')) +
+        ' は搬入直後週のため浸水なし</div>';
+    }
   } else {
     html += '<div class="sch-next">次回浸水: <strong>' + esc(s.soakDayOfWeek) + '曜日 — ' + esc(s.nextSoakGroupName) + 'グループ</strong></div>';
   }
